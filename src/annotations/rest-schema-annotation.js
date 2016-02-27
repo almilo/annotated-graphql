@@ -25,6 +25,7 @@ function createResolver(restClient, restSchemaAnnotation) {
     const resolver = (source, graphqlArgs) => {
         const clientMethod = restClient[restSchemaAnnotation.method || 'get'],
             restArgs = {
+                headers: { 'User-Agent': 'annotated-graphql' },
                 parameters: filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs))
             };
 

@@ -1,6 +1,10 @@
 import sinon from 'sinon';
 import RestSchemaAnnotation from './rest-schema-annotation';
 
+const httpHeaders = {
+    'User-Agent': 'annotated-graphql'
+};
+
 describe('RestSchemaAnnotation', function () {
     describe('apply()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
@@ -71,7 +75,7 @@ describe('RestSchemaAnnotation', function () {
 
             restClient.get.callArgWith(2, 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', {parameters: {}});
+            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {}}));
 
             return result.should.be.fulfilledWith('foo');
         });
@@ -88,7 +92,7 @@ describe('RestSchemaAnnotation', function () {
 
             restClient.post.callArgWith(2, {foo: 'foo'});
 
-            sinon.assert.calledWith(restClient.post, 'http://foo.com/bar', {parameters: {bar: 'bar', baz: 'baz'}});
+            sinon.assert.calledWith(restClient.post, 'http://foo.com/bar', extendWithDefaults({parameters: {bar: 'bar', baz: 'baz'}}));
 
             return result.should.be.fulfilledWith('foo');
         });
@@ -103,7 +107,7 @@ describe('RestSchemaAnnotation', function () {
 
             restClient.get.callArgWith(2, 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', {parameters: {baz: 'baz'}});
+            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {baz: 'baz'}}));
 
             return result.should.be.fulfilledWith('foo');
         });
@@ -118,9 +122,13 @@ describe('RestSchemaAnnotation', function () {
 
             restClient.get.callArgWith(2, 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', {parameters: {baz: 'baz'}});
+            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {baz: 'baz'}}));
 
             return result.should.be.fulfilledWith('foo');
         });
-    })
+    });
+
+    function extendWithDefaults(restClientArgs) {
+        return Object.assign({}, {headers: httpHeaders}, restClientArgs);
+    }
 });
