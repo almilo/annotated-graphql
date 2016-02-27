@@ -1,0 +1,38 @@
+{
+  "name": "annotated-graphql",
+  "version": "0.0.1",
+  "description": "Annotated GraphQL",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "mocha ./src/**/*.spec.js --require should --compilers js:babel-register --watch",
+    "dev-server": "babel src --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
+    "test": "mocha ./src/**/*.spec.js --require should --compilers js:babel-register",
+    "dist": "npm test && babel src --out-dir dist",
+    "prepublish": "npm run dist"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "GraphQL",
+    "Annotations"
+  ],
+  "author": "Alberto Mijares <almilo@almilo.es>",
+  "license": "MIT",
+  "dependencies": {
+    "node-rest-client": "^1.8.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.4.18"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.5.1",
+    "babel-preset-es2015": "^6.5.0",
+    "mocha": "^2.4.5",
+    "should": "^8.2.2",
+    "sinon": "^1.17.3"
+  },
+  "engines": {
+    "node": ">=5"
+  }
+}
