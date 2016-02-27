@@ -1,4 +1,3 @@
-import assert from 'assert';
 import RegexpAnnotationExtractor from './regexp-annotation-extractor';
 
 const regexpAnnotationExtractor = new RegexpAnnotationExtractor(

@@ -1,5 +1,5 @@
 import { Client } from 'node-rest-client';
-import RegexpAnnotationExtractor from './regexp-annotation-extractor';
+import RegexpAnnotationExtractor from '../regexp-annotation-extractor';
 
 const restClient = new Client();
 

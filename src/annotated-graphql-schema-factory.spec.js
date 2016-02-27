@@ -1,5 +1,5 @@
 import { GraphQLSchema } from 'graphql';
-import RestSchemaAnnotation from './rest-schema-annotation';
+import RestSchemaAnnotation from './annotations/rest-schema-annotation';
 import AnnotatedGraphQLSchemaFactory from './annotated-graphql-schema-factory';
 
 const annotatedGraphQLSchemaFactory = new AnnotatedGraphQLSchemaFactory(

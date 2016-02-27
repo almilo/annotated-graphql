@@ -1,5 +1,5 @@
 import { GraphQLSchema } from 'graphql';
-import RestSchemaAnnotation from './rest-schema-annotation';
+import RestSchemaAnnotation from './annotations/rest-schema-annotation';
 import AnnotatedGraphQLSchemaParser from './annotated-graphql-schema-parser';
 
 const annotatedGraphQLSchemaParser = new AnnotatedGraphQLSchemaParser(
