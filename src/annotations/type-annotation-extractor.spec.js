@@ -39,4 +39,18 @@ describe('TypeAnnotationExtractor', function () {
         text.should.equal('type Foo {@foo(bar: "baz") foo() }');
         annotations.should.be.deepEqual([]);
     });
+
+
+    it('should extract first type annotation', function () {
+        const annotations = [];
+
+        const text = typeAnnotationExtractor.extract('@foo(bar: "bar") @bar(baz: "baz") type Foo { foo() }', annotations);
+
+        text.should.equal('type Foo { foo() }');
+        annotations.should.be.deepEqual([{
+            typeName: 'Foo',
+            'bar': 'bar'
+        }]);
+        annotations[0].should.be.instanceOf(FooAnnotation);
+    });
 });

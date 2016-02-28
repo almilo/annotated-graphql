@@ -55,4 +55,19 @@ describe('FieldAnnotationExtractor', function () {
         }]);
         annotations[0].should.be.instanceOf(FooAnnotation);
     });
+
+    it('should extract first field annotation', function () {
+        const annotations = [];
+
+        const text = fieldAnnotationExtractor.extract('type Bar { bar() } type Foo { @foo(bar: "bar") @bar(baz: "baz") foo() }', annotations);
+
+        text.should.equal('type Bar { bar() } type Foo {  @bar(baz: "baz") foo() }');
+        annotations.should.be.deepEqual([
+            {
+                typeName: 'Foo',
+                fieldName: 'foo',
+                'bar': 'bar'
+            }]);
+        annotations[0].should.be.instanceOf(FooAnnotation);
+    });
 });

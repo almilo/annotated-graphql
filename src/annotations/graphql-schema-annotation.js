@@ -23,6 +23,7 @@ export default class GraphQLSchemaAnnotation {
             const itemNode = findNode(schemaTypes, this.typeName, this.fieldName);
 
             if (itemNode) {
+                // TODO: description does not work for fields
                 itemNode.description = this.description;
             } else {
                 console.log(`Document node for 'typeName': ${this.typeName}, 'fieldName': ${fieldName}.`);
