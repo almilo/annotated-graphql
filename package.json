@@ -1,6 +1,6 @@
 {
   "name": "annotated-graphql",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Annotated GraphQL",
   "main": "dist/index.js",
   "scripts": {
