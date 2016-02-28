@@ -13,10 +13,14 @@ export default class RestSchemaAnnotation {
         this.fieldName = fieldName;
     }
 
-    apply(schemaImplementation) {
+    onBuildImplementation(schemaImplementation) {
         const type = getOrCreate(schemaImplementation, this.typeName);
 
         type[this.fieldName] = createResolver(restClient, this);
+    }
+
+    onAnnotateTypes(schemaTypes) {
+        // noop
     }
 }
 

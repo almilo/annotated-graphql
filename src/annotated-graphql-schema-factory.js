@@ -11,10 +11,14 @@ export default class {
 
     createSchema(annotatedSchema) {
         const {schemaText, schemaAnnotations} = this.annotatedGraphQLSchemaParser.parseSchema(annotatedSchema),
-            query = Type(
-                parse(schemaText),
-                createImplementation(schemaAnnotations)
-            ).objectTypes[findQueryTypeName(schemaAnnotations)];
+            schemaDocument = parse(schemaText), schemaImplementation = {};
+
+        buildImplementation(schemaAnnotations, schemaImplementation, schemaDocument);
+
+        const schemaTypes = Type(schemaDocument, schemaImplementation),
+            query = schemaTypes.objectTypes[findQueryTypeName(schemaAnnotations)];
+
+        annotateTypes(schemaAnnotations, schemaTypes, schemaDocument);
 
         return new GraphQLSchema({
             query
@@ -22,14 +26,18 @@ export default class {
     }
 }
 
-function createImplementation(schemaAnnotations) {
-    return schemaAnnotations.reduce(applySchemaAnnotation, {});
+function buildImplementation(schemaAnnotations, schemaImplementation, schemaDocument) {
+    schemaAnnotations.reduce(applySchemaAnnotation, schemaImplementation);
 
-    function applySchemaAnnotation(implementation, schemaAnnotation) {
-        schemaAnnotation.apply(implementation);
+    function applySchemaAnnotation(schemaImplementation, schemaAnnotation) {
+        schemaAnnotation.onBuildImplementation(schemaImplementation, schemaDocument);
 
-        return implementation;
+        return schemaImplementation;
     }
+}
+
+function annotateTypes(schemaAnnotations, schemaTypes, schemaDocument) {
+    schemaAnnotations.forEach(schemaAnnotation => schemaAnnotation.onAnnotateTypes(schemaTypes, schemaDocument));
 }
 
 function findQueryTypeName(schemaAnnotations) {

@@ -6,11 +6,11 @@ const httpHeaders = {
 };
 
 describe('GraphQLSchemaAnnotation', function () {
-    describe('apply()', function () {
+    describe('onBuildImplementation()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
             const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), implementation = {};
 
-            restSchemaAnnotation.apply(implementation);
+            restSchemaAnnotation.onBuildImplementation(implementation);
 
             implementation.foo.bar.should.be.Function();
         });
@@ -54,7 +54,7 @@ describe('GraphQLSchemaAnnotation', function () {
             const implementation = {};
 
             restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar');
-            restSchemaAnnotation.apply(implementation);
+            restSchemaAnnotation.onBuildImplementation(implementation);
 
             resolver = implementation.foo.bar;
 
