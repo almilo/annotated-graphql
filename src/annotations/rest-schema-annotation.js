@@ -1,15 +1,14 @@
 import { Client } from 'node-rest-client';
-import RegexpAnnotationExtractor from '../regexp-annotation-extractor';
+import FieldAnnotationExtractor  from './field-annotation-extractor';
 
 const restClient = new Client();
 
 export default class RestSchemaAnnotation {
     static createExtractor() {
-        return new RestSchemaAnnotationExtractor();
+        return new FieldAnnotationExtractor('rest', RestSchemaAnnotation);
     }
 
-// TODO: support type extraction
-    constructor(typeName = 'Query', fieldName) {
+    constructor(typeName, fieldName) {
         this.typeName = typeName;
         this.fieldName = fieldName;
     }
@@ -25,13 +24,11 @@ function createResolver(restClient, restSchemaAnnotation) {
     const resolver = (source, graphqlArgs) => {
         const clientMethod = restClient[restSchemaAnnotation.method || 'get'],
             restArgs = {
-                headers: { 'User-Agent': 'annotated-graphql' },
+                headers: {'User-Agent': 'annotated-graphql'},
                 parameters: filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs))
             };
 
         return new Promise(resolve => {
-                // TODO: error handling
-                // TODO: support multiple result fields
                 clientMethod(restSchemaAnnotation.url, restArgs, responseData => {
                     const result = restSchemaAnnotation.resultField ? responseData[restSchemaAnnotation.resultField] : responseData;
 
@@ -64,22 +61,4 @@ function getOrCreate(containerObject, propertyName) {
     }
 
     return propertyValue;
-}
-
-class RestSchemaAnnotationExtractor extends RegexpAnnotationExtractor {
-    constructor() {
-        // TODO: support parent type extraction
-        super('@rest\\s*\\(([\\S|\\s]*?)\\)\\s*(.*)\\(', extractorFactory);
-
-        function extractorFactory(schemaAnnotations) {
-            return function (match, attributes, fieldName) {
-                const restSchemaAnnotation = new RestSchemaAnnotation(undefined, fieldName);
-
-                Object.assign(restSchemaAnnotation, eval(`({${attributes}})`));
-                schemaAnnotations.push(restSchemaAnnotation);
-
-                return `${fieldName} (`;
-            }
-        }
-    }
 }

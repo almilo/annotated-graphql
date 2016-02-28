@@ -13,9 +13,21 @@ export default class {
 
         function extractAnnotations(annotationExtractors, annotatedSchemaText, schemaAnnotations) {
             return annotationExtractors.reduce(
-                (schemaText, annotationExtractor) => annotationExtractor.extract(schemaText, schemaAnnotations),
+                (schemaText, annotationExtractor) => applyExtractor(annotationExtractor, schemaText, schemaAnnotations),
                 annotatedSchemaText
             );
+
+            function applyExtractor(annotationExtractor, schemaText, schemaAnnotations) {
+                let previousAnnotationCount = schemaAnnotations.length,
+                    newSchemaText = annotationExtractor.extract(schemaText, schemaAnnotations);
+
+                while(schemaAnnotations.length > previousAnnotationCount) {
+                    previousAnnotationCount = schemaAnnotations.length;
+                    newSchemaText = annotationExtractor.extract(newSchemaText, schemaAnnotations);
+                }
+
+                return newSchemaText;
+            }
         }
     }
 }

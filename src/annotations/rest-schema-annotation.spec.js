@@ -5,7 +5,7 @@ const httpHeaders = {
     'User-Agent': 'annotated-graphql'
 };
 
-describe('RestSchemaAnnotation', function () {
+describe('GraphQLSchemaAnnotation', function () {
     describe('apply()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
             const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), implementation = {};
@@ -32,15 +32,15 @@ describe('RestSchemaAnnotation', function () {
                 schemaAnnotations = [];
 
             const schemaText = restSchemaAnnotationExtractor.extract(
-                '@rest(url:"http://foo.com")foo()',
+                'type Foo { @rest(url:"http://foo.com")foo() }',
                 schemaAnnotations
             );
 
-            schemaText.should.be.equal('foo ()');
+            schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    typeName: 'Foo',
                     fieldName: 'foo',
-                    typeName: 'Query',
                     url: 'http://foo.com'
                 }
             ]);
