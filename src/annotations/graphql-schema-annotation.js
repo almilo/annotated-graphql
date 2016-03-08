@@ -1,12 +1,15 @@
-import TypeAnnotationExtractor  from './type-annotation-extractor';
-import FieldAnnotationExtractor  from './field-annotation-extractor';
+import RegexpAnnotationExtractor  from './extractors/regexp-annotation-extractor';
+import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
+import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
+
+const schemaAnnotationType = 'graphql';
 
 export default class GraphQLSchemaAnnotation {
     static createExtractor() {
-        return [
-            new TypeAnnotationExtractor('graphql', GraphQLSchemaAnnotation),
-            new FieldAnnotationExtractor('graphql', GraphQLSchemaAnnotation)
-        ];
+        return RegexpAnnotationExtractor.createCombinedExtractor([
+            new TypeAnnotationExtractor(schemaAnnotationType, GraphQLSchemaAnnotation),
+            new FieldAnnotationExtractor(schemaAnnotationType, GraphQLSchemaAnnotation)
+        ]);
     }
 
     constructor(typeName, fieldName) {

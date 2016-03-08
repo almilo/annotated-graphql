@@ -27,7 +27,7 @@ describe('AnnotatedGraphQLSchemaParser', function () {
 
         const {schemaText, schemaAnnotations} =  annotatedGraphQLSchemaParser.parseSchema(validAnnotatedGraphQLSchema);
 
-        schemaText.should.equal(`type Query { foo (): String }`);
+        schemaText.should.equal(`type Query {  foo(): String }`);
         schemaAnnotations.should.have.length(1);
         schemaAnnotations[0].should.be.instanceOf(RestSchemaAnnotation);
     });

@@ -1,11 +1,19 @@
-import { Client } from 'node-rest-client';
-import FieldAnnotationExtractor  from './field-annotation-extractor';
+import request from 'request';
+import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
+import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
+import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
-const restClient = new Client();
+const requestDefaults = {
+    json: true,
+    headers: {'User-Agent': 'annotated-graphql'}
+};
 
 export default class RestSchemaAnnotation {
     static createExtractor() {
-        return new FieldAnnotationExtractor('rest', RestSchemaAnnotation);
+        return RegexpAnnotationExtractor.createCombinedExtractor([
+            new TypeAnnotationExtractor('rest', RestSchemaAnnotation),
+            new FieldAnnotationExtractor('rest', RestSchemaAnnotation)
+        ]);
     }
 
     constructor(typeName, fieldName) {
@@ -16,7 +24,12 @@ export default class RestSchemaAnnotation {
     onBuildImplementation(schemaImplementation) {
         const type = getOrCreate(schemaImplementation, this.typeName);
 
-        type[this.fieldName] = createResolver(restClient, this);
+        if (this.fieldName) {
+            type[this.fieldName] = createResolver(request, this);
+        } else {
+            apply(requestDefaults, this)
+        }
+
     }
 
     onAnnotateTypes(schemaTypes) {
@@ -24,25 +37,44 @@ export default class RestSchemaAnnotation {
     }
 }
 
-function createResolver(restClient, restSchemaAnnotation) {
+function apply(requestDefaults, restSchemaAnnotation) {
+    let basicAuthorization = restSchemaAnnotation.basicAuthorization;
+
+    if (basicAuthorization) {
+        const envVariableName = (basicAuthorization.match(/\{\{(GRAPHQL_.*)\}\}/) || [])[1];
+
+        if (envVariableName) {
+            basicAuthorization = process.env[envVariableName];
+        }
+
+        Object.assign(requestDefaults, {
+            headers: {'Authorization': `Basic ${basicAuthorization}`},
+            jar: true
+        });
+    }
+}
+
+function createResolver(request, restSchemaAnnotation) {
     const resolver = (source, graphqlArgs) => {
-        const clientMethod = restClient[restSchemaAnnotation.method || 'get'],
-            restArgs = {
-                headers: {'User-Agent': 'annotated-graphql'},
-                parameters: filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs))
-            };
+        const method = restSchemaAnnotation.method || 'get',
+            payloadField = method === 'get' ? 'qs' : 'body',
+            clientMethod = request[method],
+            requestArgs = Object.assign({}, requestDefaults, {
+                url: restSchemaAnnotation.url,
+                [payloadField]: filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs))
+            });
 
         return new Promise(resolve => {
-                clientMethod(restSchemaAnnotation.url, restArgs, responseData => {
-                    const result = restSchemaAnnotation.resultField ? responseData[restSchemaAnnotation.resultField] : responseData;
+                clientMethod(requestArgs, (error, response, body) => {
+                    const result = restSchemaAnnotation.resultField ?
+                        body[restSchemaAnnotation.resultField] :
+                        body;
 
                     return resolve(result)
                 });
             }
         );
     };
-
-    resolver.restClient = restClient;
 
     return resolver;
 }

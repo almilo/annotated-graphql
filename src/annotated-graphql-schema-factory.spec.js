@@ -10,7 +10,7 @@ const annotatedGraphQLSchemaFactory = new AnnotatedGraphQLSchemaFactory(
 
 describe('AnnotatedGraphQLSchemaFactory', function () {
     it('should throw an error when the schema is an invalid graphql schema', function () {
-        (_ => annotatedGraphQLSchemaFactory.createSchema('')).should.throw(/query must be Object/);
+        (_ => annotatedGraphQLSchemaFactory.createSchema('')).should.throw(/Schema query must be Object Type/);
     });
 
     it('should return a valid executable graphql schema when the schema is a valid executable graphql schema', function () {

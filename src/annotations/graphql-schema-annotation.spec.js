@@ -3,23 +3,22 @@ import GraphQLSchemaAnnotation from './graphql-schema-annotation';
 describe('GraphQLSchemaAnnotation', function () {
     describe('extractor', function () {
         it('should not modify anything when no annotations match', function () {
-            const graphqlSchemaAnnotationExtractors = GraphQLSchemaAnnotation.createExtractor(),
-                schemaAnnotations = [];
-
-            const schemaText = graphqlSchemaAnnotationExtractors.reduce((schemaText, extractor) => {
-                return extractor.extract(schemaText, schemaAnnotations);
-            }, 'foo bar');
+            const schemaAnnotations = [],
+                schemaText = GraphQLSchemaAnnotation.createExtractor().extract(
+                    'foo bar',
+                    schemaAnnotations
+                );
 
             schemaText.should.be.equal('foo bar');
             schemaAnnotations.should.be.deepEqual([]);
         });
 
         it('should extract the matching annotations', function () {
-            const graphqlSchemaAnnotationExtractors = GraphQLSchemaAnnotation.createExtractor();
-
-            let schemaAnnotations = [], schemaText = graphqlSchemaAnnotationExtractors.reduce((schemaText, extractor) => {
-                return extractor.extract(schemaText, schemaAnnotations);
-            }, '@graphql(role: "query") type Foo { foo() }');
+            let schemaAnnotations = [],
+                schemaText = GraphQLSchemaAnnotation.createExtractor().extract(
+                    '@graphql(role: "query") type Foo { foo() }',
+                    schemaAnnotations
+                );
 
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
@@ -31,9 +30,10 @@ describe('GraphQLSchemaAnnotation', function () {
             ]);
 
             schemaAnnotations = [];
-            schemaText = graphqlSchemaAnnotationExtractors.reduce((schemaText, extractor) => {
-                return extractor.extract(schemaText, schemaAnnotations);
-            }, 'type Foo { @graphql(description: "description") foo() }');
+            schemaText = GraphQLSchemaAnnotation.createExtractor().extract(
+                'type Foo { @graphql(description: "description") foo() }',
+                schemaAnnotations
+            );
 
             schemaText.should.be.equal('type Foo {  foo() }');
             schemaAnnotations.should.be.deepEqual([

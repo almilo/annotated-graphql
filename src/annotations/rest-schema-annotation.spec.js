@@ -1,11 +1,12 @@
 import sinon from 'sinon';
+import request from 'request';
 import RestSchemaAnnotation from './rest-schema-annotation';
 
 const httpHeaders = {
     'User-Agent': 'annotated-graphql'
 };
 
-describe('GraphQLSchemaAnnotation', function () {
+describe('RestSchemaAnnotation', function () {
     describe('onBuildImplementation()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
             const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), implementation = {};
@@ -16,7 +17,8 @@ describe('GraphQLSchemaAnnotation', function () {
         });
     });
 
-    describe('extractor', function () {
+
+    describe('extract()', function () {
         it('should not modify anything when no annotations match', function () {
             const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
                 schemaAnnotations = [];
@@ -27,7 +29,7 @@ describe('GraphQLSchemaAnnotation', function () {
             schemaAnnotations.should.be.deepEqual([]);
         });
 
-        it('should extract the matching annotation', function () {
+        it('should extract the matching field annotation', function () {
             const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
                 schemaAnnotations = [];
 
@@ -45,10 +47,48 @@ describe('GraphQLSchemaAnnotation', function () {
                 }
             ]);
         });
+
+        it('should extract the matching type annotation', function () {
+            const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
+                schemaAnnotations = [];
+
+            const schemaText = restSchemaAnnotationExtractor.extract(
+                '@rest(url:"http://foo.com") type Foo { foo() }',
+                schemaAnnotations
+            );
+
+            schemaText.should.be.equal('type Foo { foo() }');
+            schemaAnnotations.should.be.deepEqual([
+                {
+                    typeName: 'Foo',
+                    fieldName: undefined,
+                    url: 'http://foo.com'
+                }
+            ]);
+        });
+
+        it('should extract the basic authorization information', function () {
+            const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
+                schemaAnnotations = [];
+
+            const schemaText = restSchemaAnnotationExtractor.extract(
+                '@rest(basicAuthorization:"foo:bar") type Foo { foo() }',
+                schemaAnnotations
+            );
+
+            schemaText.should.be.equal('type Foo { foo() }');
+            schemaAnnotations.should.be.deepEqual([
+                {
+                    typeName: 'Foo',
+                    fieldName: undefined,
+                    basicAuthorization: 'foo:bar'
+                }
+            ]);
+        });
     });
 
-    describe('resolver', function () {
-        let resolver, restSchemaAnnotation, restClient;
+    describe('field annotation resolver', function () {
+        let resolver, restSchemaAnnotation;
 
         beforeEach(function () {
             const implementation = {};
@@ -58,14 +98,13 @@ describe('GraphQLSchemaAnnotation', function () {
 
             resolver = implementation.foo.bar;
 
-            if (!restClient) {
-                restClient = resolver.restClient;
-                sinon.stub(restClient, 'get');
-                sinon.stub(restClient, 'post');
-            }
+            sinon.stub(request, 'get');
+            sinon.stub(request, 'post');
+        });
 
-            restClient.get.reset();
-            restClient.post.reset();
+        afterEach(function () {
+            request.get.restore();
+            request.post.restore();
         });
 
         it('should call the GET method without parameters and return all the data', function () {
@@ -73,16 +112,17 @@ describe('GraphQLSchemaAnnotation', function () {
 
             const result = resolver(undefined, {});
 
-            restClient.get.callArgWith(2, 'foo');
+            request.get.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {}}));
+            sinon.assert.calledWith(request.get, extendWithDefaults({
+                url: 'http://foo.com/bar',
+                qs: {}
+            }));
 
             return result.should.be.fulfilledWith('foo');
         });
 
         it('should call the POST method with all parameters and return the provided field of the data', function () {
-            const restClient = resolver.restClient;
-
             restSchemaAnnotation.url = 'http://foo.com/bar';
             restSchemaAnnotation.method = 'post';
             restSchemaAnnotation.parameters = ['bar', 'baz'];
@@ -90,45 +130,53 @@ describe('GraphQLSchemaAnnotation', function () {
 
             const result = resolver(undefined, {bar: 'bar', baz: 'baz'});
 
-            restClient.post.callArgWith(2, {foo: 'foo'});
+            request.post.callArgWith(1, null, 'response', {foo: 'foo'});
 
-            sinon.assert.calledWith(restClient.post, 'http://foo.com/bar', extendWithDefaults({parameters: {bar: 'bar', baz: 'baz'}}));
+            sinon.assert.calledWith(request.post, extendWithDefaults({
+                url: 'http://foo.com/bar',
+                body: {
+                    bar: 'bar',
+                    baz: 'baz'
+                }
+            }));
 
             return result.should.be.fulfilledWith('foo');
         });
 
         it('should call the GET method with all non-empty parameters and return all the data', function () {
-            const restClient = resolver.restClient;
-
             restSchemaAnnotation.url = 'http://foo.com/bar';
             restSchemaAnnotation.parameters = ['bar', 'baz'];
 
             const result = resolver(undefined, {bar: undefined, baz: 'baz'});
 
-            restClient.get.callArgWith(2, 'foo');
+            request.get.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {baz: 'baz'}}));
+            sinon.assert.calledWith(request.get, extendWithDefaults({
+                url: 'http://foo.com/bar',
+                qs: {baz: 'baz'}
+            }));
 
             return result.should.be.fulfilledWith('foo');
         });
 
         it('should call the GET method with only the non-empty requested parameters and return all the data', function () {
-            const restClient = resolver.restClient;
-
             restSchemaAnnotation.url = 'http://foo.com/bar';
             restSchemaAnnotation.parameters = ['bar', 'baz'];
 
             const result = resolver(undefined, {foo: 'foo', bar: undefined, baz: 'baz'});
 
-            restClient.get.callArgWith(2, 'foo');
+            request.get.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(restClient.get, 'http://foo.com/bar', extendWithDefaults({parameters: {baz: 'baz'}}));
+            sinon.assert.calledWith(request.get, extendWithDefaults({
+                url: 'http://foo.com/bar',
+                qs: {baz: 'baz'}
+            }));
 
             return result.should.be.fulfilledWith('foo');
         });
     });
 
-    function extendWithDefaults(restClientArgs) {
-        return Object.assign({}, {headers: httpHeaders}, restClientArgs);
+    function extendWithDefaults(args) {
+        return Object.assign({}, {json: true, headers: httpHeaders}, args);
     }
 });

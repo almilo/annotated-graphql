@@ -4,9 +4,9 @@
   "description": "Annotated GraphQL",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "mocha ./src/**/*.spec.js --require should --compilers js:babel-register --watch",
+    "dev": "mocha src --recursive --require should --compilers js:babel-register --watch",
     "dev-server": "babel src --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
-    "test": "mocha ./src/**/*.spec.js --require should --compilers js:babel-register",
+    "test": "mocha src --recursive --require should --compilers js:babel-register",
     "dist": "npm test && babel src --out-dir dist",
     "prepublish": "npm run dist"
   },
@@ -20,7 +20,7 @@
   "author": "Alberto Mijares <almilo@almilo.es>",
   "license": "MIT",
   "dependencies": {
-    "node-rest-client": "^1.8.0"
+    "request": "^2.69.0"
   },
   "peerDependencies": {
     "graphql": "^0.4.18"

@@ -16,7 +16,7 @@ export default class {
         buildImplementation(schemaAnnotations, schemaImplementation, schemaDocument);
 
         const schemaTypes = Type(schemaDocument, schemaImplementation),
-            query = schemaTypes.objectTypes[findQueryTypeName(schemaAnnotations)];
+            query = schemaTypes.objectTypes[findQueryTypeName(schemaAnnotations) || 'Query'];
 
         annotateTypes(schemaAnnotations, schemaTypes, schemaDocument);
 
@@ -45,9 +45,5 @@ function findQueryTypeName(schemaAnnotations) {
         return schemaAnnotation instanceof GraphQLSchemaAnnotation && schemaAnnotation.role === 'query';
     });
 
-    if (!queryAnnotation) {
-        throw new Error('No GraphQL query schema annotation found in schema.');
-    }
-
-    return queryAnnotation.typeName;
+    return queryAnnotation && queryAnnotation.typeName;
 }
