@@ -4,8 +4,9 @@ import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
 const requestDefaults = {
+    headers: {'User-Agent': 'annotated-graphql'},
     json: true,
-    headers: {'User-Agent': 'annotated-graphql'}
+    jar: true
 };
 
 export default class RestSchemaAnnotation {
@@ -47,8 +48,7 @@ function apply(requestDefaults, restSchemaAnnotation) {
         }
 
         Object.assign(requestDefaults, {
-            headers: {'Authorization': `Basic ${basicAuthorization}`},
-            jar: true
+            headers: {'Authorization': `Basic ${basicAuthorization}`}
         });
     }
 }

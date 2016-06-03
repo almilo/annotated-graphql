@@ -16,7 +16,7 @@ describe('RestSchemaAnnotation', function () {
             resolvers.foo.bar.should.be.Function();
         });
     });
-    
+
     describe('extract()', function () {
         it('should not modify anything when no annotations match', function () {
             const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
@@ -199,6 +199,6 @@ describe('RestSchemaAnnotation', function () {
     });
 
     function extendWithDefaults(args) {
-        return Object.assign({}, {json: true, headers: httpHeaders}, args);
+        return Object.assign({}, {json: true, jar: true, headers: httpHeaders}, args);
     }
 });
