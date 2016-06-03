@@ -194,7 +194,7 @@ describe('RestSchemaAnnotation', function () {
             restSchemaAnnotation.url = 'http://example.com/{foo}';
             restSchemaAnnotation.parameters = ['bar'];
 
-            (_ => resolver(undefined, {bar: 'bar2'})).should.throw(/Replacement value .* "foo"/);
+            (_ => resolver(undefined, {bar: 'bar2'})).should.throw(/Replacement value .* 'foo'/);
         });
     });
 

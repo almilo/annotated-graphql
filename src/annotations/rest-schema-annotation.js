@@ -54,58 +54,61 @@ function apply(requestDefaults, restSchemaAnnotation) {
 }
 
 function createResolver(request, restSchemaAnnotation) {
-    const resolver = (source, graphqlArgs) => {
+    return (source, graphqlArgs) => {
         const method = restSchemaAnnotation.method || 'get',
-            payloadField = method === 'get' ? 'qs' : 'body',
             clientMethod = request[method],
             nonEmptyParameters = filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs)),
             {url, parameters} = consumeUrlParameters(restSchemaAnnotation.url, nonEmptyParameters),
             requestArgs = Object.assign({}, requestDefaults, {
                 url,
-                [payloadField]: parameters
+                [method === 'get' ? 'qs' : 'body']: parameters
             });
 
         return new Promise(resolve => {
-                clientMethod(requestArgs, (error, response, body) => {
+                clientMethod(requestArgs, callback);
+
+                function callback(error, response, body) {
                     const result = restSchemaAnnotation.resultField ?
                         body[restSchemaAnnotation.resultField] :
                         body;
 
-                    return resolve(result)
-                });
+                    return resolve(result);
+                }
             }
         );
-
-        function consumeUrlParameters(url, allParameters) {
-            url = url.replace(/(\{(.*?)\})/g, function (match, parameterLiteral, parameterName) {
-                const parameterValue = allParameters[parameterName];
-
-                if (parameterValue === undefined) {
-                    throw new Error(`Replacement value for url parameter: "${parameterName}" not found.`);
-                }
-                delete allParameters[parameterName];
-
-                return parameterValue;
-            });
-
-            return {
-                url,
-                parameters: allParameters
-            };
-        }
     };
-
-    return resolver;
 }
 
 function filterEmptyParameters(sourceParameters, targetParameterNames) {
-    return targetParameterNames.reduce((parameters, parameterName) => {
+    return targetParameterNames.reduce(filterEmptyParameter, {});
+
+    function filterEmptyParameter(nonEmptyParameters, parameterName) {
         if (sourceParameters[parameterName] !== undefined) {
-            parameters[parameterName] = sourceParameters[parameterName];
+            nonEmptyParameters[parameterName] = sourceParameters[parameterName];
         }
 
-        return parameters;
-    }, {})
+        return nonEmptyParameters;
+    }
+}
+
+function consumeUrlParameters(url, parameters) {
+    return {
+        url: url.replace(/(\{(.*?)\})/g, createParameterReplacer(parameters)),
+        parameters
+    };
+
+    function createParameterReplacer(parameters) {
+        return (match, parameterTemplate, parameterName) => {
+            const parameterValue = parameters[parameterName];
+
+            if (parameterValue === undefined) {
+                throw new Error(`Replacement value for url parameter: '${parameterName}' not found.`);
+            }
+            delete parameters[parameterName];
+
+            return parameterValue;
+        };
+    }
 }
 
 function getOrCreate(containerObject, propertyName) {
