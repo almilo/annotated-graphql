@@ -17,7 +17,7 @@ export default class GraphQLSchemaAnnotation {
         this.fieldName = fieldName;
     }
 
-    onBuildImplementation(schemaImplementation) {
+    onCreateResolver(resolvers) {
         // noop
     }
 

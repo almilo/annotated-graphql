@@ -21,15 +21,14 @@ export default class RestSchemaAnnotation {
         this.fieldName = fieldName;
     }
 
-    onBuildImplementation(schemaImplementation) {
-        const type = getOrCreate(schemaImplementation, this.typeName);
+    onCreateResolver(resolvers) {
+        const type = getOrCreate(resolvers, this.typeName);
 
         if (this.fieldName) {
             type[this.fieldName] = createResolver(request, this);
         } else {
             apply(requestDefaults, this)
         }
-
     }
 
     onAnnotateTypes(schemaTypes) {
@@ -59,9 +58,11 @@ function createResolver(request, restSchemaAnnotation) {
         const method = restSchemaAnnotation.method || 'get',
             payloadField = method === 'get' ? 'qs' : 'body',
             clientMethod = request[method],
+            nonEmptyParameters = filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs)),
+            {url, parameters} = consumeUrlParameters(restSchemaAnnotation.url, nonEmptyParameters),
             requestArgs = Object.assign({}, requestDefaults, {
-                url: restSchemaAnnotation.url,
-                [payloadField]: filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs))
+                url,
+                [payloadField]: parameters
             });
 
         return new Promise(resolve => {
@@ -74,6 +75,24 @@ function createResolver(request, restSchemaAnnotation) {
                 });
             }
         );
+
+        function consumeUrlParameters(url, allParameters) {
+            url = url.replace(/(\{(.*?)\})/g, function (match, parameterLiteral, parameterName) {
+                const parameterValue = allParameters[parameterName];
+
+                if (parameterValue === undefined) {
+                    throw new Error(`Replacement value for url parameter: "${parameterName}" not found.`);
+                }
+                delete allParameters[parameterName];
+
+                return parameterValue;
+            });
+
+            return {
+                url,
+                parameters: allParameters
+            };
+        }
     };
 
     return resolver;

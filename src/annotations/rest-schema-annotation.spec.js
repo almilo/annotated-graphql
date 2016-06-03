@@ -7,17 +7,16 @@ const httpHeaders = {
 };
 
 describe('RestSchemaAnnotation', function () {
-    describe('onBuildImplementation()', function () {
+    describe('onCreateResolver()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
-            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), implementation = {};
+            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), resolvers = {};
 
-            restSchemaAnnotation.onBuildImplementation(implementation);
+            restSchemaAnnotation.onCreateResolver(resolvers);
 
-            implementation.foo.bar.should.be.Function();
+            resolvers.foo.bar.should.be.Function();
         });
     });
-
-
+    
     describe('extract()', function () {
         it('should not modify anything when no annotations match', function () {
             const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
@@ -91,12 +90,12 @@ describe('RestSchemaAnnotation', function () {
         let resolver, restSchemaAnnotation;
 
         beforeEach(function () {
-            const implementation = {};
+            const resolvers = {};
 
             restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar');
-            restSchemaAnnotation.onBuildImplementation(implementation);
+            restSchemaAnnotation.onCreateResolver(resolvers);
 
-            resolver = implementation.foo.bar;
+            resolver = resolvers.foo.bar;
 
             sinon.stub(request, 'get');
             sinon.stub(request, 'post');
@@ -173,6 +172,29 @@ describe('RestSchemaAnnotation', function () {
             }));
 
             return result.should.be.fulfilledWith('foo');
+        });
+
+        it('should call the GET method with replaced url parameters', function () {
+            restSchemaAnnotation.url = 'http://example.com/{foo}/{bar}';
+            restSchemaAnnotation.parameters = ['foo', 'bar', 'baz'];
+
+            const result = resolver(undefined, {foo: 'foo1', bar: 'bar2', baz: 'baz3'});
+
+            request.get.callArgWith(1, null, 'response', 'foo');
+
+            sinon.assert.calledWith(request.get, extendWithDefaults({
+                url: 'http://example.com/foo1/bar2',
+                qs: {baz: 'baz3'}
+            }));
+
+            return result.should.be.fulfilledWith('foo');
+        });
+
+        it('should throw an error when no replacement value for url parameter is found', function () {
+            restSchemaAnnotation.url = 'http://example.com/{foo}';
+            restSchemaAnnotation.parameters = ['bar'];
+
+            (_ => resolver(undefined, {bar: 'bar2'})).should.throw(/Replacement value .* "foo"/);
         });
     });
 
