@@ -3,7 +3,7 @@ import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor'
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
-const requestDefaults = {
+const requestDefaultsInitialValues = {
     headers: {'User-Agent': 'annotated-graphql'},
     json: true,
     jar: true
@@ -22,11 +22,12 @@ export default class RestSchemaAnnotation {
         this.fieldName = fieldName;
     }
 
-    onCreateResolver(resolvers) {
-        const type = getOrCreate(resolvers, this.typeName);
+    onCreateResolver(resolvers, resolversContext) {
+        const type = getOrCreate(resolvers, this.typeName),
+            requestDefaults = getOrCreate(resolversContext, '_requestDefaults', requestDefaultsInitialValues);
 
         if (this.fieldName) {
-            type[this.fieldName] = this._createResolver(request);
+            type[this.fieldName] = this._createResolver(request, requestDefaults);
         } else {
             this._applyToRequestDefaults(requestDefaults)
         }
@@ -58,11 +59,11 @@ export default class RestSchemaAnnotation {
         }
     }
 
-    _createResolver(request) {
-        return (source, graphqlArgs) => {
+    _createResolver(request, requestDefaults) {
+        return (root, args) => {
             const method = this.method || 'get',
                 clientMethod = request[method],
-                nonEmptyParameters = filterEmptyParameters(graphqlArgs, this.parameters || Object.keys(graphqlArgs)),
+                nonEmptyParameters = filterEmptyParameters(args, this.parameters || Object.keys(args)),
                 {url, parameters} = consumeUrlParameters(this.url, nonEmptyParameters),
                 requestArgs = Object.assign({}, requestDefaults, {
                     url,
@@ -117,11 +118,11 @@ function consumeUrlParameters(url, parameters) {
     }
 }
 
-function getOrCreate(containerObject, propertyName) {
+function getOrCreate(containerObject, propertyName, initialValues) {
     let propertyValue = containerObject[propertyName];
 
     if (typeof propertyValue != 'object') {
-        propertyValue = containerObject[propertyName] = {};
+        propertyValue = containerObject[propertyName] = initialValues ? Object.assign({}, initialValues) : {};
     }
 
     return propertyValue;

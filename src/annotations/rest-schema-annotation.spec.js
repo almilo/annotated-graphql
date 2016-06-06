@@ -9,9 +9,10 @@ const httpHeaders = {
 describe('RestSchemaAnnotation', function () {
     describe('onCreateResolver()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
-            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'), resolvers = {};
+            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'),
+                resolvers = {}, resolversContext = {};
 
-            restSchemaAnnotation.onCreateResolver(resolvers);
+            restSchemaAnnotation.onCreateResolver(resolvers, resolversContext);
 
             resolvers.foo.bar.should.be.Function();
         });
@@ -109,10 +110,10 @@ describe('RestSchemaAnnotation', function () {
         let resolver, restSchemaAnnotation;
 
         beforeEach(function () {
-            const resolvers = {};
+            const resolvers = {}, resolversContext = {};
 
             restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar');
-            restSchemaAnnotation.onCreateResolver(resolvers);
+            restSchemaAnnotation.onCreateResolver(resolvers, resolversContext);
 
             resolver = resolvers.foo.bar;
 

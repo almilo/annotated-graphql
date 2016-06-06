@@ -20,10 +20,12 @@ export default class {
 }
 
 function createResolvers(schemaAnnotations) {
+    const resolversContext = {};
+
     return schemaAnnotations.reduce(createResolver, {});
 
     function createResolver(resolvers, schemaAnnotation) {
-        schemaAnnotation.onCreateResolver(resolvers);
+        schemaAnnotation.onCreateResolver(resolvers, resolversContext);
 
         return resolvers;
     }
