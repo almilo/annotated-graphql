@@ -1,4 +1,5 @@
 import request from 'request';
+import DataLoader from 'dataloader';
 import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
@@ -62,28 +63,58 @@ export default class RestSchemaAnnotation {
     }
 
     _createResolver(request, requestDefaults) {
-        return (root, args) => {
-            const method = this.method || 'get',
-                clientMethod = request[method],
-                nonEmptyParameters = filterEmptyParameters(args, this.parameters || Object.keys(args)),
+        return (root, args, context) => {
+            const nonEmptyParameters = filterEmptyParameters(args, this.parameters || Object.keys(args)),
                 {url, parameters} = consumeUrlParameters(this.url, nonEmptyParameters),
-                requestArgs = Object.assign({}, requestDefaults, {
+                dataLoader = getDataLoader(context),
+                requestKey = {
+                    method: this.method || 'get',
+                    url,
+                    parameters,
+                    resultField: this.resultField
+                };
+
+            return dataLoader ? dataLoader.load(requestKey) : makeRequest(requestKey);
+
+            function makeRequest({method, url, parameters, resultField}) {
+                const requestArgs = Object.assign({}, requestDefaults, {
                     url,
                     [method === 'get' ? 'qs' : 'body']: parameters
                 });
 
-            return new Promise(resolve => {
-                    clientMethod(requestArgs, callback.bind(this));
+                return new Promise(resolve => request[method](requestArgs, (error, response, body) => {
+                    return resolve(resultField ? body[resultField] : body);
+                }));
+            }
 
-                    function callback(error, response, body) {
-                        const result = this.resultField ?
-                            body[this.resultField] :
-                            body;
+            function getDataLoader(context) {
+                if (context) {
+                    let restDataLoader = context._restDataLoader;
 
-                        return resolve(result);
+                    if (!restDataLoader) {
+                        restDataLoader = new DataLoader(
+                            keys => Promise.all(keys.map(makeRequest)),
+                            {
+                                cacheKeyFn: serializeRequestKey
+                            }
+                        );
+
+                        context._restDataLoader = restDataLoader;
                     }
+
+                    return restDataLoader;
+                } else {
+                    console.info('No context provided to REST annotation resolver, so no REST data loader used.');
                 }
-            );
+            }
+
+            function serializeRequestKey({method, url, parameters, resultField}) {
+                const serializedParameters = Object.keys(parameters)
+                    .map(parameterName => `${parameterName}=${parameters[parameterName]}`)
+                    .join(':');
+
+                return `${method}:${url}:${serializedParameters}:${resultField}`;
+            }
         };
     }
 }
