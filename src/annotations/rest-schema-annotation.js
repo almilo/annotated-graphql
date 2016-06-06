@@ -47,15 +47,17 @@ export default class RestSchemaAnnotation {
         }
 
         function applyBasicAuthorization(basicAuthorization, requestDefaults) {
-            const envVariableName = (basicAuthorization.match(/\{\{(GRAPHQL_.*)\}\}/) || [])[1];
-
-            if (envVariableName) {
-                basicAuthorization = process.env[envVariableName];
-            }
+            basicAuthorization = processEnvVariables(basicAuthorization);
 
             Object.assign(requestDefaults, {
                 headers: {'Authorization': `Basic ${basicAuthorization}`}
             });
+
+            function processEnvVariables(basicAuthorization) {
+                const envVariableName = (basicAuthorization.match(/\{\{(.*)\}\}/) || [])[1];
+
+                return envVariableName ? process.env[envVariableName] : basicAuthorization;
+            }
         }
     }
 
