@@ -16,7 +16,7 @@ describe('GraphQLSchemaAnnotation', function () {
         it('should extract the matching annotations', function () {
             let schemaAnnotations = [],
                 schemaText = GraphQLSchemaAnnotation.createExtractor().extract(
-                    '@graphql(role: "query") type Foo { foo() }',
+                    '@graphql(description: "foo") type Foo { foo() }',
                     schemaAnnotations
                 );
 
@@ -25,7 +25,7 @@ describe('GraphQLSchemaAnnotation', function () {
                 {
                     typeName: 'Foo',
                     fieldName: undefined,
-                    role: 'query'
+                    description: 'foo'
                 }
             ]);
 
