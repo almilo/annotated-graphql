@@ -26,57 +26,63 @@ export default class RestSchemaAnnotation {
         const type = getOrCreate(resolvers, this.typeName);
 
         if (this.fieldName) {
-            type[this.fieldName] = createResolver(request, this);
+            type[this.fieldName] = this._createResolver(request);
         } else {
-            apply(requestDefaults, this)
+            this._applyToRequestDefaults(requestDefaults)
         }
     }
 
     onAnnotateTypes(schemaTypes) {
         // noop
     }
-}
 
-function apply(requestDefaults, restSchemaAnnotation) {
-    let basicAuthorization = restSchemaAnnotation.basicAuthorization;
-
-    if (basicAuthorization) {
-        const envVariableName = (basicAuthorization.match(/\{\{(GRAPHQL_.*)\}\}/) || [])[1];
-
-        if (envVariableName) {
-            basicAuthorization = process.env[envVariableName];
+    _applyToRequestDefaults(requestDefaults) {
+        if (this.basicAuthorization) {
+            applyBasicAuthorization(this.basicAuthorization, requestDefaults);
         }
 
-        Object.assign(requestDefaults, {
-            headers: {'Authorization': `Basic ${basicAuthorization}`}
-        });
-    }
-}
+        if (this.baseUrl) {
+            requestDefaults.baseUrl = this.baseUrl;
+        }
 
-function createResolver(request, restSchemaAnnotation) {
-    return (source, graphqlArgs) => {
-        const method = restSchemaAnnotation.method || 'get',
-            clientMethod = request[method],
-            nonEmptyParameters = filterEmptyParameters(graphqlArgs, restSchemaAnnotation.parameters || Object.keys(graphqlArgs)),
-            {url, parameters} = consumeUrlParameters(restSchemaAnnotation.url, nonEmptyParameters),
-            requestArgs = Object.assign({}, requestDefaults, {
-                url,
-                [method === 'get' ? 'qs' : 'body']: parameters
-            });
+        function applyBasicAuthorization(basicAuthorization, requestDefaults) {
+            const envVariableName = (basicAuthorization.match(/\{\{(GRAPHQL_.*)\}\}/) || [])[1];
 
-        return new Promise(resolve => {
-                clientMethod(requestArgs, callback);
-
-                function callback(error, response, body) {
-                    const result = restSchemaAnnotation.resultField ?
-                        body[restSchemaAnnotation.resultField] :
-                        body;
-
-                    return resolve(result);
-                }
+            if (envVariableName) {
+                basicAuthorization = process.env[envVariableName];
             }
-        );
-    };
+
+            Object.assign(requestDefaults, {
+                headers: {'Authorization': `Basic ${basicAuthorization}`}
+            });
+        }
+    }
+
+    _createResolver(request) {
+        return (source, graphqlArgs) => {
+            const method = this.method || 'get',
+                clientMethod = request[method],
+                nonEmptyParameters = filterEmptyParameters(graphqlArgs, this.parameters || Object.keys(graphqlArgs)),
+                {url, parameters} = consumeUrlParameters(this.url, nonEmptyParameters),
+                requestArgs = Object.assign({}, requestDefaults, {
+                    url,
+                    [method === 'get' ? 'qs' : 'body']: parameters
+                });
+
+            return new Promise(resolve => {
+                    clientMethod(requestArgs, callback.bind(this));
+
+                    function callback(error, response, body) {
+                        const result = this.resultField ?
+                            body[this.resultField] :
+                            body;
+
+                        return resolve(result);
+                    }
+                }
+            );
+        };
+    }
 }
 
 function filterEmptyParameters(sourceParameters, targetParameterNames) {

@@ -84,6 +84,25 @@ describe('RestSchemaAnnotation', function () {
                 }
             ]);
         });
+
+        it('should extract the base URL information', function () {
+            const restSchemaAnnotationExtractor = RestSchemaAnnotation.createExtractor(),
+                schemaAnnotations = [];
+
+            const schemaText = restSchemaAnnotationExtractor.extract(
+                '@rest(baseUrl:"http://web.com") type Foo { foo() }',
+                schemaAnnotations
+            );
+
+            schemaText.should.be.equal('type Foo { foo() }');
+            schemaAnnotations.should.be.deepEqual([
+                {
+                    typeName: 'Foo',
+                    fieldName: undefined,
+                    baseUrl: 'http://web.com'
+                }
+            ]);
+        });
     });
 
     describe('field annotation resolver', function () {
