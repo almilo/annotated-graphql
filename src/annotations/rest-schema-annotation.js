@@ -1,29 +1,32 @@
 import request from 'request';
 import DataLoader from 'dataloader';
+import BaseSchemaAnnotation from './base-schema-annotation';
 import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
-const requestDefaultsInitialValues = {
-    headers: {'User-Agent': 'annotated-graphql'},
-    json: true,
-    jar: true
-};
+const annotationTag = 'rest',
+    requestDefaultsInitialValues = {
+        headers: {'User-Agent': 'annotated-graphql'},
+        json: true,
+        jar: true
+    };
 
-export default class RestSchemaAnnotation {
+export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
     static createExtractor() {
         return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor('rest', RestSchemaAnnotation),
-            new FieldAnnotationExtractor('rest', RestSchemaAnnotation)
+            new TypeAnnotationExtractor(annotationTag, RestSchemaAnnotation),
+            new FieldAnnotationExtractor(annotationTag, RestSchemaAnnotation)
         ]);
     }
 
     constructor(typeName, fieldName) {
-        this.typeName = typeName;
-        this.fieldName = fieldName;
+        super(annotationTag, typeName, fieldName);
     }
 
     onCreateResolver(resolvers, resolversContext) {
+        super.onCreateResolver(resolvers, resolversContext);
+
         const type = getOrCreate(resolvers, this.typeName),
             requestDefaults = getOrCreate(resolversContext, '_requestDefaults', requestDefaultsInitialValues);
 
@@ -32,10 +35,6 @@ export default class RestSchemaAnnotation {
         } else {
             this._applyToRequestDefaults(requestDefaults)
         }
-    }
-
-    onAnnotateTypes(schemaTypes) {
-        // noop
     }
 
     _applyToRequestDefaults(requestDefaults) {

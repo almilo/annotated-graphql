@@ -41,6 +41,7 @@ describe('RestSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'rest',
                     typeName: 'Foo',
                     fieldName: 'foo',
                     url: 'http://foo.com'
@@ -60,6 +61,7 @@ describe('RestSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'rest',
                     typeName: 'Foo',
                     fieldName: undefined,
                     url: 'http://foo.com'
@@ -79,6 +81,7 @@ describe('RestSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'rest',
                     typeName: 'Foo',
                     fieldName: undefined,
                     basicAuthorization: 'foo:bar'
@@ -98,6 +101,7 @@ describe('RestSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'rest',
                     typeName: 'Foo',
                     fieldName: undefined,
                     baseUrl: 'http://web.com'

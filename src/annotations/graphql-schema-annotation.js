@@ -1,27 +1,25 @@
+import BaseSchemaAnnotation from './base-schema-annotation';
 import RegexpAnnotationExtractor  from './extractors/regexp-annotation-extractor';
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
-const schemaAnnotationType = 'graphql';
+const annotationTag = 'graphql';
 
-export default class GraphQLSchemaAnnotation {
+export default class GraphQLSchemaAnnotation extends BaseSchemaAnnotation {
     static createExtractor() {
         return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor(schemaAnnotationType, GraphQLSchemaAnnotation),
-            new FieldAnnotationExtractor(schemaAnnotationType, GraphQLSchemaAnnotation)
+            new TypeAnnotationExtractor(annotationTag, GraphQLSchemaAnnotation),
+            new FieldAnnotationExtractor(annotationTag, GraphQLSchemaAnnotation)
         ]);
     }
 
     constructor(typeName, fieldName) {
-        this.typeName = typeName;
-        this.fieldName = fieldName;
-    }
-
-    onCreateResolver(resolvers) {
-        // noop
+        super(annotationTag, typeName, fieldName);
     }
 
     onAnnotateTypes(schemaTypes) {
+        super.onAnnotateTypes(schemaTypes);
+        
         if (this.description) {
             const itemNode = findNode(schemaTypes, this.typeName, this.fieldName);
 

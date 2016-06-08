@@ -23,6 +23,7 @@ describe('GraphQLSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo { foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'graphql',
                     typeName: 'Foo',
                     fieldName: undefined,
                     description: 'foo'
@@ -38,6 +39,7 @@ describe('GraphQLSchemaAnnotation', function () {
             schemaText.should.be.equal('type Foo {  foo() }');
             schemaAnnotations.should.be.deepEqual([
                 {
+                    tag: 'graphql',
                     typeName: 'Foo',
                     fieldName: 'foo',
                     description: 'description'
