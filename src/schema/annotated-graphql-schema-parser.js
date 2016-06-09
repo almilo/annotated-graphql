@@ -3,7 +3,7 @@ export default class {
         this.annotationExtractors = annotationExtractors;
     }
 
-    parseSchema(annotatedSchemaText) {
+    parse(annotatedSchemaText) {
         const schemaAnnotations = [];
 
         return {
@@ -12,22 +12,21 @@ export default class {
         };
 
         function extractAnnotations(annotationExtractors, annotatedSchemaText, schemaAnnotations) {
-            annotationExtractors = annotationExtractors.reduce((annotationExtractors, annotationExtractor) => {
-                if (annotationExtractor.length > 0) {
-                    annotationExtractors = annotationExtractors.concat(annotationExtractor);
+            return annotationExtractors
+                .reduce(flatten, [])
+                .reduce(applyExtractor, annotatedSchemaText);
+
+            function flatten(items, item) {
+                if (item.length > 0) {
+                    items = items.concat(item);
                 } else {
-                    annotationExtractors.push(annotationExtractor);
+                    items.push(item);
                 }
 
-                return annotationExtractors;
-            }, []);
+                return items;
+            }
 
-            return annotationExtractors.reduce(
-                (schemaText, annotationExtractor) => applyExtractor(annotationExtractor, schemaText, schemaAnnotations),
-                annotatedSchemaText
-            );
-
-            function applyExtractor(annotationExtractor, schemaText, schemaAnnotations) {
+            function applyExtractor(schemaText, annotationExtractor) {
                 let previousAnnotationCount = schemaAnnotations.length,
                     newSchemaText = annotationExtractor.extract(schemaText, schemaAnnotations);
 

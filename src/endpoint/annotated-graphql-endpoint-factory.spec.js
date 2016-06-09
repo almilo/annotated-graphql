@@ -1,27 +1,27 @@
 import { GraphQLSchema } from 'graphql';
-import RestSchemaAnnotation from './annotations/rest-schema-annotation';
-import AnnotatedGraphQLSchemaFactory from './annotated-graphql-schema-factory';
+import RestSchemaAnnotation from '../annotations/rest-schema-annotation';
+import AnnotatedGraphQLEndpointFactory from './annotated-graphql-endpoint-factory';
 
-const annotatedGraphQLSchemaFactory = new AnnotatedGraphQLSchemaFactory(
+const annotatedGraphQLEndpointFactory = new AnnotatedGraphQLEndpointFactory(
     [
         RestSchemaAnnotation.createExtractor()
     ]
 );
 
-describe('AnnotatedGraphQLSchemaFactory', function () {
+describe('AnnotatedGraphQLEndpointFactory', function () {
     it('should throw an error when the schema text is not valid', function () {
-        (_ => annotatedGraphQLSchemaFactory.createSchema('')).should.throw(/Must provide typeDefinitions/);
+        (_ => annotatedGraphQLEndpointFactory.createEndpoint('')).should.throw(/Must provide typeDefinitions/);
 
-        (_ => annotatedGraphQLSchemaFactory.createSchema('foo')).should.throw(/Syntax Error GraphQL/);
+        (_ => annotatedGraphQLEndpointFactory.createEndpoint('foo')).should.throw(/Syntax Error GraphQL/);
 
-        (_ => annotatedGraphQLSchemaFactory.createSchema(`
+        (_ => annotatedGraphQLEndpointFactory.createEndpoint(`
             type Query {
                 foo: String
             }
         `)).should.throw(/Must provide a schema definition/);
     });
 
-    it('should return a valid schema when the schema text is valid', function () {
+    it('should return a valid endpoint when the schema text is valid', function () {
         const validGraphQLSchema = `
             type Query {
                 foo: String
@@ -32,12 +32,12 @@ describe('AnnotatedGraphQLSchemaFactory', function () {
             }
         `;
 
-        const schema = annotatedGraphQLSchemaFactory.createSchema(validGraphQLSchema);
+        const endpoint = annotatedGraphQLEndpointFactory.createEndpoint(validGraphQLSchema);
 
-        schema.should.be.instanceof(GraphQLSchema);
+        endpoint.should.be.instanceof(Function);
     });
 
-    it('should return a valid schema when the schema text is a valid annotated schema', function () {
+    it('should return a valid endpoint when the schema text is a valid annotated schema', function () {
         const validAnnotatedGraphQLSchema = `
             type Query {
                 @rest(
@@ -51,9 +51,9 @@ describe('AnnotatedGraphQLSchemaFactory', function () {
             }
         `;
 
-        const schema = annotatedGraphQLSchemaFactory.createSchema(validAnnotatedGraphQLSchema);
+        const endpoint = annotatedGraphQLEndpointFactory.createEndpoint(validAnnotatedGraphQLSchema);
 
-        schema.should.be.instanceof(GraphQLSchema);
+        endpoint.should.be.instanceof(Function);
     });
 
     it('should throw an error when the annotated schema text is not executable', function () {
@@ -72,7 +72,7 @@ describe('AnnotatedGraphQLSchemaFactory', function () {
             }
         `;
 
-        (_ => annotatedGraphQLSchemaFactory.createSchema(validAnnotatedGraphQLSchema)).should.throw(/Resolve function missing for "Query.bar"/);
+        (_ => annotatedGraphQLEndpointFactory.createEndpoint(validAnnotatedGraphQLSchema)).should.throw(/Resolve function missing for "Query.bar"/);
     });
 
     it('should not throw an error when the annotated schema has non-scalar types without resolvers', function () {
@@ -97,6 +97,6 @@ describe('AnnotatedGraphQLSchemaFactory', function () {
              }
          `;
 
-        (_ => annotatedGraphQLSchemaFactory.createSchema(validAnnotatedGraphQLSchema)).should.not.throw;
+        (_ => annotatedGraphQLEndpointFactory.createEndpoint(validAnnotatedGraphQLSchema)).should.not.throw;
     });
 });
