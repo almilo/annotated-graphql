@@ -4,23 +4,25 @@ import BaseSchemaAnnotation from './base-schema-annotation';
 import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
+import { getOrCreate }  from '../lib';
 
-const annotationTag = 'rest',
-    requestDefaultsInitialValues = {
+const requestDefaultsInitialValues = {
         json: true,
         jar: true
     };
 
 export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
+    static TAG = 'rest';
+    
     static createExtractor() {
         return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor(annotationTag, RestSchemaAnnotation),
-            new FieldAnnotationExtractor(annotationTag, RestSchemaAnnotation)
+            new TypeAnnotationExtractor(RestSchemaAnnotation.TAG, RestSchemaAnnotation),
+            new FieldAnnotationExtractor(RestSchemaAnnotation.TAG, RestSchemaAnnotation)
         ]);
     }
 
     constructor(typeName, fieldName) {
-        super(annotationTag, typeName, fieldName);
+        super(RestSchemaAnnotation.TAG, typeName, fieldName);
     }
 
     onCreateResolver(resolvers, resolversContext) {
@@ -147,14 +149,4 @@ function consumeUrlParameters(url, parameters) {
             return parameterValue;
         };
     }
-}
-
-function getOrCreate(containerObject, propertyName, initialValues) {
-    let propertyValue = containerObject[propertyName];
-
-    if (typeof propertyValue != 'object') {
-        propertyValue = containerObject[propertyName] = initialValues ? Object.assign({}, initialValues) : {};
-    }
-
-    return propertyValue;
 }

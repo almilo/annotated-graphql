@@ -3,18 +3,18 @@ import RegexpAnnotationExtractor  from './extractors/regexp-annotation-extractor
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
-const annotationTag = 'graphql';
-
 export default class GraphQLSchemaAnnotation extends BaseSchemaAnnotation {
+    static TAG = 'graphql';
+    
     static createExtractor() {
         return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor(annotationTag, GraphQLSchemaAnnotation),
-            new FieldAnnotationExtractor(annotationTag, GraphQLSchemaAnnotation)
+            new TypeAnnotationExtractor(GraphQLSchemaAnnotation.TAG, GraphQLSchemaAnnotation),
+            new FieldAnnotationExtractor(GraphQLSchemaAnnotation.TAG, GraphQLSchemaAnnotation)
         ]);
     }
 
     constructor(typeName, fieldName) {
-        super(annotationTag, typeName, fieldName);
+        super(GraphQLSchemaAnnotation.TAG, typeName, fieldName);
     }
 
     onAnnotateTypes(schemaTypes) {
