@@ -2,10 +2,6 @@ import sinon from 'sinon';
 import request from 'request';
 import RestSchemaAnnotation from './rest-schema-annotation';
 
-const httpHeaders = {
-    'User-Agent': 'annotated-graphql'
-};
-
 describe('RestSchemaAnnotation', function () {
     describe('onCreateResolver()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
@@ -223,6 +219,6 @@ describe('RestSchemaAnnotation', function () {
     });
 
     function extendWithDefaults(args) {
-        return Object.assign({}, {json: true, jar: true, headers: httpHeaders}, args);
+        return Object.assign({}, {json: true, jar: true}, args);
     }
 });

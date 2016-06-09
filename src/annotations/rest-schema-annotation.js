@@ -7,7 +7,6 @@ import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 
 const annotationTag = 'rest',
     requestDefaultsInitialValues = {
-        headers: {'User-Agent': 'annotated-graphql'},
         json: true,
         jar: true
     };
