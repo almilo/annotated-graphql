@@ -4,16 +4,16 @@ import BaseSchemaAnnotation from './base-schema-annotation';
 import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
 import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
 import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
-import { getOrCreate }  from '../lib';
+import { getOrCreate, invariant }  from '../lib';
 
 const requestDefaultsInitialValues = {
-        json: true,
-        jar: true
-    };
+    json: true,
+    jar: true
+};
 
 export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
     static TAG = 'rest';
-    
+
     static createExtractor() {
         return RegexpAnnotationExtractor.createCombinedExtractor([
             new TypeAnnotationExtractor(RestSchemaAnnotation.TAG, RestSchemaAnnotation),
@@ -141,9 +141,8 @@ function consumeUrlParameters(url, parameters) {
         return (match, parameterTemplate, parameterName) => {
             const parameterValue = parameters[parameterName];
 
-            if (parameterValue === undefined) {
-                throw new Error(`Replacement value for url parameter: '${parameterName}' not found.`);
-            }
+            invariant(parameterValue !== undefined, `Replacement value for url parameter: '${parameterName}' not found.`);
+            
             delete parameters[parameterName];
 
             return parameterValue;

@@ -1,5 +1,6 @@
 import request from 'request';
 import queryInterceptorFactory from './annotated-graphql-query-interceptor-factory';
+import { invariant }  from '../lib';
 
 export default function (mapSchemaAnnotations, executableSchema, graphqlEndpoint) {
     const endpointUrl = extractEndpointUrl(mapSchemaAnnotations);
@@ -13,9 +14,7 @@ export default function (mapSchemaAnnotations, executableSchema, graphqlEndpoint
             .map(mapAnnotation => mapAnnotation.endpointUrl)
             .filter(endpoindUrl => !!endpoindUrl);
 
-        if (endpointUrls.length > 1) {
-            throw new Error(`Expected maximum one endpoint URL but found: '${endpointUrls}'.`);
-        }
+        invariant(endpointUrls.length <= 1, `Expected maximum one endpoint URL but found: '${endpointUrls}'.`);
 
         return endpointUrls[0];
     }

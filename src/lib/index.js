@@ -8,12 +8,8 @@ export function getOrCreate(containerObject, propertyName, initialValues) {
     return propertyValue;
 }
 
-export function getType(schemaAnnotation, clientSchema) {
-    const type = schemaAnnotation.typeName && clientSchema.getTypeMap()[schemaAnnotation.typeName];
-
-    if (!type) {
-        throw new Error(`No type specified in map schema annotation or type: '${typeName}' not found in schema.`);
+export function invariant(condition, errorMessage) {
+    if (!condition) {
+        throw new Error(errorMessage);
     }
-
-    return type;
 }

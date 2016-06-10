@@ -1,17 +1,15 @@
 import { Kind, astFromValue } from 'graphql';
-import { getType } from '../../lib';
+import { invariant } from '../../lib';
 
 export default class QueryFieldNameRewriter {
     static apply(mapSchemaAnnotation, clientSchema) {
-        if (getType(mapSchemaAnnotation, clientSchema) === clientSchema.getQueryType()) {
+        if (isQueryType(mapSchemaAnnotation.typeName, clientSchema)) {
             const sourceQueryFieldName = mapSchemaAnnotation.fieldName;
 
             if (sourceQueryFieldName) {
                 const targetQueryFieldName = mapSchemaAnnotation.targetFieldName;
 
-                if (!targetQueryFieldName) {
-                    throw new Error(`Invalid map schema annotation. If type is query and field name is present, 'targetFieldName' is required.`);
-                }
+                invariant(targetQueryFieldName, `Invalid map schema annotation. If type is query and field name is present, 'targetFieldName' is required.`);
 
                 return QueryFieldNameRewriter.create(sourceQueryFieldName, targetQueryFieldName, mapSchemaAnnotation.defaultArguments);
             }
@@ -42,9 +40,7 @@ export default class QueryFieldNameRewriter {
                 selection => selection.name.value === fieldName
             );
 
-            if (matchingQueryFieldSelections.length > 1) {
-                throw new Error(`Expected maximum one match but found:'${matchingQueryFieldSelections}'.`);
-            }
+            invariant(matchingQueryFieldSelections.length <= 1, `Expected maximum one match but found:'${matchingQueryFieldSelections}'.`);
 
             return matchingQueryFieldSelections[0];
         }
@@ -59,14 +55,11 @@ export default class QueryFieldNameRewriter {
                     fieldArguments.push(createArgument(defaultArgumentName, defaultArguments[defaultArgumentName]));
                 }
             }
-            
+
             function hasArgument(fieldArguments, argumentName) {
                 const matchingArguments = fieldArguments.filter(fieldArgument => fieldArgument.name.value === argumentName);
 
-                // TODO: extract invariants
-                if (matchingArguments.length > 1) {
-                    throw new Error(`Expected only one argument with name: '${argumentName}' but found: '${matchingArguments}'`);
-                }
+                invariant(matchingArguments.length <= 1, `Expected only one argument with name: '${argumentName}' but found: '${matchingArguments}'`);
 
                 return !!matchingArguments[0];
             }
@@ -83,4 +76,12 @@ export default class QueryFieldNameRewriter {
             }
         }
     }
+}
+
+function isQueryType(typeName, clientSchema) {
+    const type = clientSchema.getType(typeName);
+
+    invariant(type, `No type specified or type: '${typeName}' not found in schema.`);
+
+    return type === clientSchema.getQueryType();
 }
