@@ -23,11 +23,12 @@ export default class QueryFieldNameRewriter {
             if (queryField) {
                 queryField.name.value = targetQueryFieldName;
 
-                queryField.alias = {
-                    kind: Kind.NAME,
-                    value: sourceQueryFieldName
-                };
-
+                if (!queryField.alias) {
+                    queryField.alias = {
+                        kind: Kind.NAME,
+                        value: sourceQueryFieldName
+                    };
+                }
 
                 if (defaultArguments) {
                     queryField.arguments = applyDefaultArguments(queryField.arguments, defaultArguments);
