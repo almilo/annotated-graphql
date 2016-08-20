@@ -2,12 +2,17 @@
   "name": "annotated-graphql",
   "version": "0.1.0",
   "description": "Annotated GraphQL",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "mocha src --recursive --require should --compilers js:babel-register --watch",
-    "dev:server": "babel src --ignore *.spec.js --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/src --watch",
-    "test": "mocha src --recursive --require should --compilers js:babel-register"
+    "dev:server": "babel src --ignore *.spec.js --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
+    "test": "mocha src --recursive --require should --compilers js:babel-register",
+    "dist": "rm -rf dist && npm test && babel src --ignore *.spec.js --out-dir dist",
+    "prepublish": "npm run dist"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "GraphQL",
     "Annotations"
