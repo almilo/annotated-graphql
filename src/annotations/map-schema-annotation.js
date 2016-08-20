@@ -1,18 +1,15 @@
 import BaseSchemaAnnotation from './base-schema-annotation';
-import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
-import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
-import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
 import { getOrCreate } from '../lib';
 
+// TODO: document
 export default class MapSchemaAnnotation extends BaseSchemaAnnotation {
     static TAG = 'map';
 
-    static createExtractor() {
-        return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor(MapSchemaAnnotation.TAG, MapSchemaAnnotation),
-            new FieldAnnotationExtractor(MapSchemaAnnotation.TAG, MapSchemaAnnotation)
-        ]);
-    }
+    static factory = (directiveInfo, typeName, fieldName) => {
+        if (directiveInfo.tag === MapSchemaAnnotation.TAG) {
+            return new MapSchemaAnnotation(typeName, fieldName);
+        }
+    };
 
     constructor(typeName, fieldName) {
         super(MapSchemaAnnotation.TAG, typeName, fieldName);

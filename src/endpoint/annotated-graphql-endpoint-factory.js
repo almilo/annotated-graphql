@@ -5,14 +5,14 @@ import AnnotatedGraphQLSchemaParser from '../schema/annotated-graphql-schema-par
 import annotatedGraphQLMappingEndpointFactory from './annotated-graphql-mapping-endpoint-factory';
 
 export default class {
-    constructor(annotationExtractors) {
-        this.annotatedGraphQLSchemaParser = new AnnotatedGraphQLSchemaParser(annotationExtractors);
+    constructor(annotationClasses) {
+        this.annotatedGraphQLSchemaParser = new AnnotatedGraphQLSchemaParser(annotationClasses);
     }
 
     createEndpoint(annotatedSchemaText) {
-        const {schemaText, schemaAnnotations} = this.annotatedGraphQLSchemaParser.parse(annotatedSchemaText),
-            executableSchema = createExecutableSchema(schemaText, createResolvers(schemaAnnotations)),
-            mapSchemaAnnotations = schemaAnnotations.filter(schemaAnnotation => schemaAnnotation.tag === MapSchemaAnnotation.TAG);
+        const schemaAnnotations = this.annotatedGraphQLSchemaParser.parse(annotatedSchemaText);
+        const executableSchema = createExecutableSchema(annotatedSchemaText, createResolvers(schemaAnnotations));
+        const mapSchemaAnnotations = schemaAnnotations.filter(schemaAnnotation => schemaAnnotation.tag === MapSchemaAnnotation.TAG);
 
         return annotatedGraphQLMappingEndpointFactory(
             mapSchemaAnnotations,

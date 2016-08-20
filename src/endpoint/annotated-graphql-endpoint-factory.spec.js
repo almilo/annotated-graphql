@@ -1,17 +1,10 @@
-import { GraphQLSchema } from 'graphql';
 import RestSchemaAnnotation from '../annotations/rest-schema-annotation';
 import AnnotatedGraphQLEndpointFactory from './annotated-graphql-endpoint-factory';
 
-const annotatedGraphQLEndpointFactory = new AnnotatedGraphQLEndpointFactory(
-    [
-        RestSchemaAnnotation.createExtractor()
-    ]
-);
+const annotatedGraphQLEndpointFactory = new AnnotatedGraphQLEndpointFactory([RestSchemaAnnotation]);
 
 describe('AnnotatedGraphQLEndpointFactory', function () {
     it('should throw an error when the schema text is not valid', function () {
-        (_ => annotatedGraphQLEndpointFactory.createEndpoint('')).should.throw(/Must provide typeDefinitions/);
-
         (_ => annotatedGraphQLEndpointFactory.createEndpoint('foo')).should.throw(/Syntax Error GraphQL/);
 
         (_ => annotatedGraphQLEndpointFactory.createEndpoint(`
@@ -40,10 +33,10 @@ describe('AnnotatedGraphQLEndpointFactory', function () {
     it('should return a valid endpoint when the schema text is a valid annotated schema', function () {
         const validAnnotatedGraphQLSchema = `
             type Query {
-                @rest(
-                    url: 'http://foo.com'
-                )
                 foo(id: Int): String
+                @rest(
+                    url: "http://foo.com"
+                )
             }
 
             schema {
@@ -59,10 +52,10 @@ describe('AnnotatedGraphQLEndpointFactory', function () {
     it('should throw an error when the annotated schema text is not executable', function () {
         const validAnnotatedGraphQLSchema = `
             type Query {
-                @rest(
-                    url: 'http://foo.com'
-                )
                 foo(id: Int): String
+                @rest(
+                    url: "http://foo.com"
+                )
 
                 bar(id: Int): String
             }
@@ -86,10 +79,10 @@ describe('AnnotatedGraphQLEndpointFactory', function () {
             }
                  
             type Query {
-                 @rest(
-                     url: 'http://foo.com'
-                 )
                  foos(id: Int): [Foo]
+                 @rest(
+                     url: "http://foo.com"
+                 )
              }
  
              schema {

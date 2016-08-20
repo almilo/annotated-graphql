@@ -1,28 +1,26 @@
 import request from 'request';
 import DataLoader from 'dataloader';
 import BaseSchemaAnnotation from './base-schema-annotation';
-import RegexpAnnotationExtractor from './extractors/regexp-annotation-extractor';
-import TypeAnnotationExtractor  from './extractors/type-annotation-extractor';
-import FieldAnnotationExtractor  from './extractors/field-annotation-extractor';
-import { getOrCreate, invariant }  from '../lib';
+import { getOrCreate, invariant } from '../lib';
 
 const requestDefaultsInitialValues = {
     json: true,
     jar: true
 };
 
+// TODO: document
 export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
     static TAG = 'rest';
 
-    static createExtractor() {
-        return RegexpAnnotationExtractor.createCombinedExtractor([
-            new TypeAnnotationExtractor(RestSchemaAnnotation.TAG, RestSchemaAnnotation),
-            new FieldAnnotationExtractor(RestSchemaAnnotation.TAG, RestSchemaAnnotation)
-        ]);
-    }
+    static factory = (directiveInfo, typeName, fieldName) => {
+        if (directiveInfo.tag === RestSchemaAnnotation.TAG) {
+            return new RestSchemaAnnotation(typeName, fieldName, BaseSchemaAnnotation.asArgumentsMap(directiveInfo.arguments));
+        }
+    };
 
-    constructor(typeName, fieldName) {
+    constructor(typeName, fieldName, argumentMap = {}) {
         super(RestSchemaAnnotation.TAG, typeName, fieldName);
+        this.argumentMap = argumentMap;
     }
 
     onCreateResolver(resolvers, resolversContext) {
@@ -39,19 +37,19 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
     }
 
     _applyToRequestDefaults(requestDefaults) {
-        if (this.basicAuthorization) {
-            applyBasicAuthorization(this.basicAuthorization, requestDefaults);
+        if (this.argumentMap.basicAuthorization) {
+            applyBasicAuthorization(this.argumentMap.basicAuthorization, requestDefaults);
         }
 
-        if (this.baseUrl) {
-            requestDefaults.baseUrl = this.baseUrl;
+        if (this.argumentMap.baseUrl) {
+            requestDefaults.baseUrl = this.argumentMap.baseUrl;
         }
 
         function applyBasicAuthorization(basicAuthorization, requestDefaults) {
             basicAuthorization = processEnvVariables(basicAuthorization);
 
             Object.assign(requestDefaults, {
-                headers: {'Authorization': `Basic ${basicAuthorization}`}
+                headers: { 'Authorization': `Basic ${basicAuthorization}` }
             });
 
             function processEnvVariables(basicAuthorization) {
@@ -64,19 +62,19 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
 
     _createResolver(request, requestDefaults) {
         return (root, args, context) => {
-            const nonEmptyParameters = filterEmptyParameters(args, this.parameters || Object.keys(args)),
-                {url, parameters} = consumeUrlParameters(this.url, nonEmptyParameters),
+            const nonEmptyParameters = filterEmptyParameters(args, this.argumentMap.parameters || Object.keys(args)),
+                { url, parameters } = consumeUrlParameters(this.argumentMap.url, nonEmptyParameters),
                 dataLoader = getDataLoader(context),
                 requestKey = {
-                    method: this.method || 'get',
+                    method: this.argumentMap.method || 'get',
                     url,
                     parameters,
-                    resultField: this.resultField
+                    resultField: this.argumentMap.resultField
                 };
 
             return dataLoader ? dataLoader.load(requestKey) : makeRequest(requestKey);
 
-            function makeRequest({method, url, parameters, resultField}) {
+            function makeRequest({ method, url, parameters, resultField }) {
                 const requestArgs = Object.assign({}, requestDefaults, {
                     url,
                     [method === 'get' ? 'qs' : 'body']: parameters
@@ -108,7 +106,7 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
                 }
             }
 
-            function serializeRequestKey({method, url, parameters, resultField}) {
+            function serializeRequestKey({ method, url, parameters, resultField }) {
                 const serializedParameters = Object.keys(parameters)
                     .map(parameterName => `${parameterName}=${parameters[parameterName]}`)
                     .join(':');
@@ -142,7 +140,7 @@ function consumeUrlParameters(url, parameters) {
             const parameterValue = parameters[parameterName];
 
             invariant(parameterValue !== undefined, `Replacement value for url parameter: '${parameterName}' not found.`);
-            
+
             delete parameters[parameterName];
 
             return parameterValue;
