@@ -8,7 +8,7 @@
     "test": "mocha 'src/**/*.spec.js' --require should --compilers js:babel-register",
     "dev": "npm test -- --watch",
     "dev:server": "npm run compile -- --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
-    "dist": "rm -rf dist && npm test && npm run compile -- --out-dir dist",
+    "dist": "shx rm -rf dist && npm test && npm run compile -- --out-dir dist",
     "prepublish": "npm run dist"
   },
   "files": [
@@ -35,6 +35,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "mocha": "^2.4.5",
     "should": "^8.2.2",
+    "shx": "^0.1.4",
     "sinon": "^1.17.3"
   },
   "engines": {
