@@ -1,11 +1,14 @@
-import sinon from 'sinon';
-import request from 'request';
+import * as sinon from 'sinon';
+import * as request from 'request';
 import RestSchemaAnnotation from './rest-schema-annotation';
+import { GraphQLFieldResolversMap } from './base-schema-annotation';
+import { GraphQLFieldResolveFn } from 'graphql';
+import SinonSpy = Sinon.SinonSpy;
 
 describe('RestSchemaAnnotation', function () {
     describe('factory', function () {
         it('should return undefined when the annotation info does not match', function () {
-            (RestSchemaAnnotation.factory({ tag: 'foo', arguments: [] }) === undefined).should.be.ok;
+            (RestSchemaAnnotation.factory({ tag: 'foo', arguments: [] }, 'foo', 'bar') === undefined).should.be.ok;
         });
 
         it('should create the corresponding annotation', function () {
@@ -32,33 +35,37 @@ describe('RestSchemaAnnotation', function () {
 
     describe('onCreateResolver()', function () {
         it('should add a resolver function to the field bar of the type foo', function () {
-            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar'),
-                resolvers = {}, resolversContext = {};
+            const restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar');
+            const resolvers: GraphQLFieldResolversMap = {};
+            const resolversContext = {};
 
             restSchemaAnnotation.onCreateResolver(resolvers, resolversContext);
 
-            resolvers.foo.bar.should.be.Function();
+            (<any>resolvers).foo.bar.should.be.Function();
         });
     });
 
     describe('field annotation resolver', function () {
-        let resolver, restSchemaAnnotation;
+        let getSpy: SinonSpy;
+        let postSpy: SinonSpy;
+        let resolver: GraphQLFieldResolveFn;
+        let restSchemaAnnotation: RestSchemaAnnotation;
 
         beforeEach(function () {
-            const resolvers = {}, resolversContext = {};
+            const resolvers: GraphQLFieldResolversMap = {}, resolversContext = {};
 
             restSchemaAnnotation = new RestSchemaAnnotation('foo', 'bar');
             restSchemaAnnotation.onCreateResolver(resolvers, resolversContext);
 
-            resolver = resolvers.foo.bar;
+            resolver = (<any>resolvers).foo.bar;
 
-            sinon.stub(request, 'get');
-            sinon.stub(request, 'post');
+            getSpy = sinon.stub(request, 'get');
+            postSpy = sinon.stub(request, 'post');
         });
 
         afterEach(function () {
-            request.get.restore();
-            request.post.restore();
+            getSpy.restore();
+            postSpy.restore();
         });
 
         it('should call the GET method without parameters and return all the data', function () {
@@ -66,9 +73,9 @@ describe('RestSchemaAnnotation', function () {
 
             const result = resolver(undefined, {});
 
-            request.get.callArgWith(1, null, 'response', 'foo');
+            getSpy.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(request.get, extendWithDefaults({
+            sinon.assert.calledWith(getSpy, extendWithDefaults({
                 url: 'http://foo.com/bar',
                 qs: {}
             }));
@@ -84,9 +91,9 @@ describe('RestSchemaAnnotation', function () {
 
             const result = resolver(undefined, { bar: 'bar', baz: 'baz' });
 
-            request.post.callArgWith(1, null, 'response', { foo: 'foo' });
+            postSpy.callArgWith(1, null, 'response', { foo: 'foo' });
 
-            sinon.assert.calledWith(request.post, extendWithDefaults({
+            sinon.assert.calledWith(postSpy, extendWithDefaults({
                 url: 'http://foo.com/bar',
                 body: {
                     bar: 'bar',
@@ -103,9 +110,9 @@ describe('RestSchemaAnnotation', function () {
 
             const result = resolver(undefined, { bar: undefined, baz: 'baz' });
 
-            request.get.callArgWith(1, null, 'response', 'foo');
+            getSpy.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(request.get, extendWithDefaults({
+            sinon.assert.calledWith(getSpy, extendWithDefaults({
                 url: 'http://foo.com/bar',
                 qs: { baz: 'baz' }
             }));
@@ -119,9 +126,9 @@ describe('RestSchemaAnnotation', function () {
 
             const result = resolver(undefined, { foo: 'foo', bar: undefined, baz: 'baz' });
 
-            request.get.callArgWith(1, null, 'response', 'foo');
+            getSpy.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(request.get, extendWithDefaults({
+            sinon.assert.calledWith(getSpy, extendWithDefaults({
                 url: 'http://foo.com/bar',
                 qs: { baz: 'baz' }
             }));
@@ -135,9 +142,9 @@ describe('RestSchemaAnnotation', function () {
 
             const result = resolver(undefined, { foo: 'foo1', bar: 'bar2', baz: 'baz3' });
 
-            request.get.callArgWith(1, null, 'response', 'foo');
+            getSpy.callArgWith(1, null, 'response', 'foo');
 
-            sinon.assert.calledWith(request.get, extendWithDefaults({
+            sinon.assert.calledWith(getSpy, extendWithDefaults({
                 url: 'http://example.com/foo1/bar2',
                 qs: { baz: 'baz3' }
             }));
@@ -149,11 +156,11 @@ describe('RestSchemaAnnotation', function () {
             restSchemaAnnotation.argumentMap.url = 'http://example.com/{foo}';
             restSchemaAnnotation.argumentMap.parameters = ['bar'];
 
-            (_ => resolver(undefined, { bar: 'bar2' })).should.throw(/Replacement value .* 'foo'/);
+            (() => resolver(undefined, { bar: 'bar2' })).should.throw(/Replacement value .* 'foo'/);
         });
     });
 
-    function extendWithDefaults(args) {
+    function extendWithDefaults(args: Object) {
         return Object.assign({}, { json: true, jar: true }, args);
     }
 });

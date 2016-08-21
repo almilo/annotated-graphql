@@ -1,3 +1,18 @@
+import { TypeMap, GraphQLFieldResolveFn } from 'graphql';
+
+export type AnnotationArgument = {name: string, value: any};
+
+export type DirectiveInfo = {
+    tag: string,
+    arguments: Array<AnnotationArgument>
+}
+
+export type AnnotationFactory<T> = {
+    (directiveInfo: DirectiveInfo, typeName: string, fieldName: string): T
+}
+
+export type GraphQLFieldResolversMap = {[key: string]: GraphQLFieldResolveFn};
+
 /**
  * Base class for schema annotations
  *
@@ -8,20 +23,17 @@
  *  Note: argument level is not yet supported
  *
  */
-export default class BaseSchemaAnnotation {
-    static asArgumentsMap(argumentsList) {
-        return argumentsList.reduce((argumentsMap, argument) => {
+abstract class BaseSchemaAnnotation {
+    static asArgumentsMap(argumentsList: Array<AnnotationArgument>): Object {
+        return argumentsList.reduce((argumentsMap: {[key: string]: any}, argument: AnnotationArgument) => {
             argumentsMap[argument.name] = argument.value;
 
             return argumentsMap;
         }, {});
     }
 
-    constructor(tag, typeName, fieldName) {
+    constructor(protected tag: string, protected typeName: string, protected fieldName: string) {
         // TODO: add validation
-        this.tag = tag;
-        this.typeName = typeName;
-        this.fieldName = fieldName;
     }
 
     /**
@@ -30,7 +42,7 @@ export default class BaseSchemaAnnotation {
      * @param resolvers current map of resolvers where to add new resolvers
      * @param resolversContext context object to be used by the resolvers
      */
-    onCreateResolver(resolvers, resolversContext) {
+    onCreateResolver(resolvers: GraphQLFieldResolversMap, resolversContext: Object) {
         // noop
     }
 
@@ -40,7 +52,10 @@ export default class BaseSchemaAnnotation {
      *
      * @param schemaTypes map of the schema types to annotate
      */
-    onAnnotateTypes(schemaTypes) {
+    onAnnotateTypes(schemaTypes: TypeMap) {
         // noop
     }
 }
+
+// bug in TS parser not allowing export default abstract...
+export default BaseSchemaAnnotation;

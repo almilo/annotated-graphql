@@ -4,7 +4,7 @@ import GraphQLSchemaAnnotation from './graphql-schema-annotation';
 describe('GraphQLSchemaAnnotation', function () {
     describe('factory', function () {
         it('should return undefined when the annotation info does not match', function () {
-            (GraphQLSchemaAnnotation.factory({ tag: 'foo', arguments: [] }) === undefined).should.be.ok;
+            (GraphQLSchemaAnnotation.factory({ tag: 'foo', arguments: [] }, 'foo', 'bar') === undefined).should.be.ok;
         });
 
         it('should create the corresponding annotation', function () {
@@ -34,7 +34,8 @@ describe('GraphQLSchemaAnnotation', function () {
             const annotation = new GraphQLSchemaAnnotation('Foo', undefined, 'bar');
             annotation.onAnnotateTypes(schema.getTypeMap());
 
-            schema.getTypeMap()['Foo'].description.should.equal('bar');
+            // description is not part of the typings
+            (<any>schema.getTypeMap()['Foo']).description.should.equal('bar');
         });
 
         it('should add a description to the corresponding field', function () {
@@ -43,12 +44,13 @@ describe('GraphQLSchemaAnnotation', function () {
             const annotation = new GraphQLSchemaAnnotation('Foo', 'bar', 'baz');
             annotation.onAnnotateTypes(schema.getTypeMap());
 
-            schema.getTypeMap()['Foo'].getFields()['bar'].description.should.equal('baz');
+            // getFields() is not part of the typings
+            (<any>schema.getTypeMap()['Foo']).getFields()['bar'].description.should.equal('baz');
         });
     });
 });
 
-function createSchema(schemaText) {
+function createSchema(schemaText: string) {
     const fakeSchema = 'type Query {foo: String} schema {query: Query}';
 
     return buildSchemaFromTypeDefinitions([fakeSchema, schemaText]);

@@ -1,0 +1,14 @@
+{
+  "globalDependencies": {
+    "ambient": "file:ambient.d.ts",
+    "mocha": "registry:dt/mocha#2.2.5+20160720003353",
+    "node": "registry:env/node#6.0.0+20160813135048",
+    "request": "registry:dt/request#0.0.0+20160726020908",
+    "should": "registry:dt/should#8.1.1+20160608082854",
+    "sinon": "registry:dt/sinon#1.16.0+20160517064723"
+  },
+  "dependencies": {
+    "form-data": "registry:npm/form-data#1.0.0+20160812072516",
+    "graphql": "registry:npm/graphql#0.5.0+20160602041655"
+  }
+}

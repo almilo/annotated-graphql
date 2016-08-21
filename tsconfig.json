@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "pretty": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "ambient.d.ts"
+  ]
+}
