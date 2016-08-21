@@ -4,9 +4,9 @@
   "description": "Annotated GraphQL",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "mocha src --recursive --require should --compilers js:babel-register --watch",
-    "dev:server": "babel src --ignore *.spec.js --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
     "test": "mocha src --recursive --require should --compilers js:babel-register",
+    "dev": "npm test -- --watch",
+    "dev:server": "babel src --ignore *.spec.js --out-dir ../annotated-graphql-server/node_modules/annotated-graphql/dist --watch",
     "dist": "rm -rf dist && npm test && babel src --ignore *.spec.js --out-dir dist",
     "prepublish": "npm run dist"
   },
