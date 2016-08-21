@@ -13,7 +13,7 @@ const annotatedGraphQLSchemaParser = new AnnotatedGraphQLSchemaParser([
     }
 ]);
 
-describe.only('AnnotatedGraphQLSchemaParser', function () {
+describe('AnnotatedGraphQLSchemaParser', function () {
     it('should return no annotations when no annotations are present', function () {
         const schema = `
             type Query {
