@@ -1,6 +1,6 @@
 import * as request from 'request';
-import * as DataLoader from 'dataloader';
 import { RequestAPI, RequiredUriUrl, CoreOptions, Request } from 'request';
+import * as DataLoader from 'dataloader';
 import { GraphQLFieldResolveFn } from 'graphql';
 import { getOrCreate, invariant } from '../lib';
 import BaseSchemaAnnotation, {
@@ -9,6 +9,7 @@ import BaseSchemaAnnotation, {
     GraphQLFieldResolversMap
 } from './base-schema-annotation';
 
+// TODO: workaround for import problem with es6 class exported as default
 interface IDataLoader {
     load(key: Object): any;
 }
@@ -16,6 +17,15 @@ interface IDataLoader {
 const requestDefaultsInitialValues = {
     json: true,
     jar: true
+};
+
+export type IArgumentMap =  {
+    baseUrl?: string,
+    basicAuthorization?: string,
+    url?: string,
+    parameters?: Array<string>,
+    method?: string,
+    resultField?: string
 };
 
 // TODO: document
@@ -30,16 +40,9 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
         }
     };
 
-    argumentMap: {
-        baseUrl?: string,
-        basicAuthorization?: string,
-        url?: string,
-        parameters?: Array<string>,
-        method?: string,
-        resultField?: string
-    };
+    argumentMap: IArgumentMap;
 
-    constructor(typeName: string, fieldName: string, argumentMap = {}) {
+    constructor(typeName: string, fieldName: string, argumentMap: IArgumentMap = {}) {
         super(RestSchemaAnnotation.TAG, typeName, fieldName);
         this.argumentMap = argumentMap;
     }

@@ -25,11 +25,13 @@ export type GraphQLFieldResolversMap = {[key: string]: GraphQLFieldResolveFn};
  */
 abstract class BaseSchemaAnnotation {
     static asArgumentsMap(argumentsList: Array<AnnotationArgument>): Object {
-        return argumentsList.reduce((argumentsMap: {[key: string]: any}, argument: AnnotationArgument) => {
+        return argumentsList.reduce(asObject, {});
+
+        function asObject(argumentsMap: {[key: string]: any}, argument: AnnotationArgument) {
             argumentsMap[argument.name] = argument.value;
 
             return argumentsMap;
-        }, {});
+        }
     }
 
     constructor(protected tag: string, protected typeName: string, protected fieldName: string) {

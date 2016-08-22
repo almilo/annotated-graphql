@@ -1,6 +1,5 @@
-import { TypeMap } from 'graphql';
+import { TypeMap, GraphQLObjectType } from 'graphql';
 import BaseSchemaAnnotation, { DirectiveInfo, AnnotationFactory } from './base-schema-annotation';
-import { GraphQLObjectType } from 'graphql';
 
 /**
  * Schema annotation which allows providing extra information as for instance descriptions
