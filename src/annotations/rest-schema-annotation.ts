@@ -9,11 +9,6 @@ import BaseSchemaAnnotation, {
     GraphQLFieldResolversMap
 } from './base-schema-annotation';
 
-// TODO: workaround for import problem with es6 class exported as default
-interface IDataLoader {
-    load(key: Object): any;
-}
-
 const requestDefaultsInitialValues = {
     json: true,
     jar: true
@@ -116,7 +111,7 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
                 });
             }
 
-            function getDataLoader(context?: {_restDataLoader: IDataLoader}): IDataLoader {
+            function getDataLoader(context?: {_restDataLoader: IDataLoader<Object, Object>}): IDataLoader<Object, Object> {
                 if (context) {
                     let restDataLoader = context._restDataLoader;
 
