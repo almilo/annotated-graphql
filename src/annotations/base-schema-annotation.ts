@@ -1,6 +1,9 @@
 import { TypeMap, GraphQLFieldResolveFn } from 'graphql';
 
-export type AnnotationArgument = {name: string, value: any};
+export type AnnotationArgument = {
+    name: string,
+    value: any
+};
 
 export type DirectiveInfo = {
     tag: string,

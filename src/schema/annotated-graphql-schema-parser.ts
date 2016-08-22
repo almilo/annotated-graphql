@@ -1,10 +1,36 @@
-import { parse, visit } from 'graphql';
+import { parse, visit, Document } from 'graphql';
+import {
+    default as BaseSchemaAnnotation,
+    AnnotationFactory,
+    AnnotationArgument,
+    DirectiveInfo
+} from '../annotations/base-schema-annotation';
+
+interface ASTNode {
+    kind: string,
+    name: {
+        value: string
+    },
+    value: {
+        kind: string,
+        value: any
+    },
+    directives: Array<ASTNode>
+}
+
+type DirectiveContext = {
+    directiveNode: ASTNode,
+    targetNode: ASTNode,
+    ancestorNodes: Array<ASTNode>
+};
 
 /**
  * Given a list of annotation classes, parses a GraphQL schema text and returns a list of the recognised annotations
  */
 export default class {
-    constructor(annotationClasses) {
+    annotationFactories: {[key: string]: AnnotationFactory<BaseSchemaAnnotation>};
+
+    constructor(annotationClasses: Array<{TAG: string, factory: AnnotationFactory<BaseSchemaAnnotation>}>) {
         this.annotationFactories = annotationClasses.reduce(asObjectProperty, {});
 
         function asObjectProperty(annotationFactoriesByTag, annotationClass) {
@@ -20,30 +46,38 @@ export default class {
      * @param schemaText the GraphQL schema in text
      * @returns a list with the recognised schema annotations
      */
-    parse(schemaText) {
+    parse(schemaText: string): Array<BaseSchemaAnnotation> {
         return extractDirectiveContexts(parse(schemaText))
             .reduce(applyAnnotationFactories(this.annotationFactories), []);
 
-        function extractDirectiveContexts(schemaAst) {
-            const directiveContexts = [];
+        function extractDirectiveContexts(schemaAst: Document): Array<DirectiveContext> {
+            const directiveContexts: Array<DirectiveContext> = [];
 
-            visit(schemaAst, {
-                enter(targetNode, key, parent, path, ancestors) {
-                    if (targetNode.directives) {
-                        targetNode.directives.forEach(directiveNode => directiveContexts.push({
-                            directiveNode,
-                            targetNode,
-                            ancestorNodes: Array.from(ancestors).reverse()
-                        }));
-                    }
-                }
-            });
+            visit(schemaAst, createExtractDirectiveContextsVisitor(directiveContexts), undefined);
 
             return directiveContexts;
+
+            function createExtractDirectiveContextsVisitor(directiveContexts: Array<DirectiveContext>) {
+                return {
+                    enter(targetNode, key, parent, path, ancestors: Array<ASTNode>) {
+                        if (targetNode.directives) {
+                            targetNode.directives.forEach(extractDirectiveContext);
+                        }
+
+                        function extractDirectiveContext(directiveNode): void {
+                            directiveContexts.push({
+                                directiveNode,
+                                targetNode,
+                                ancestorNodes: Array.from(ancestors).reverse()
+                            });
+                        }
+                    }
+                };
+            }
         }
 
-        function applyAnnotationFactories(annotationFactories) {
-            return (annotations, directiveContext) => {
+        function applyAnnotationFactories(annotationFactories: {[key: string]: AnnotationFactory<BaseSchemaAnnotation>}) {
+            return (annotations: Array<BaseSchemaAnnotation>, directiveContext: DirectiveContext): Array<BaseSchemaAnnotation> => {
                 const annotationType = directiveContext.directiveNode.name.value;
                 const annotationFactory = annotationFactories[annotationType];
 
@@ -62,14 +96,14 @@ export default class {
 
                 return annotations;
 
-                function extractDirectiveInfo(directiveNode) {
+                function extractDirectiveInfo(directiveNode): DirectiveInfo {
                     return {
                         tag: directiveNode.name.value,
                         arguments: directiveNode.arguments.map(parseArgument)
                     };
                 }
 
-                function extractTypeAndFieldNames(ancestorNodes, targetNode) {
+                function extractTypeAndFieldNames(ancestorNodes, targetNode): {typeName: string, fieldName: string} {
                     const fieldName = targetNode.kind === 'FieldDefinition' ? targetNode.name.value : undefined;
                     const typeNode = fieldName ? findTypeNode(ancestorNodes) : targetNode;
                     const typeName = typeNode.name.value;
@@ -109,13 +143,13 @@ const converters = {
  * @param argumentNode AST node with a GraphQL argument value which should be transformed into the corresponding JS value
  * @returns an object with name and value
  */
-function parseArgument(argumentNode) {
+function parseArgument(argumentNode: ASTNode): AnnotationArgument {
     return {
         name: argumentNode.name.value,
         value: toJSON(argumentNode.value.kind, argumentNode.value.value)
     };
 
-    function toJSON(kind, value) {
+    function toJSON(kind, value): any {
         const converter = converters[kind];
 
         if (!converter) {
