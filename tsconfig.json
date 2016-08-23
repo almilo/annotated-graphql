@@ -6,7 +6,6 @@
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": false,
-    "allowSyntheticDefaultImports": true,
     "rootDir": "./src",
     "outDir": "./dist",
     "pretty": true,

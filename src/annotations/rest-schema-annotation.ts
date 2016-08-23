@@ -1,6 +1,6 @@
 import * as request from 'request';
 import { RequestAPI, RequiredUriUrl, CoreOptions, Request } from 'request';
-import * as DataLoader from 'dataloader';
+import DataLoader = require('dataloader');
 import { GraphQLFieldResolveFn } from 'graphql';
 import { getOrCreate, invariant } from '../lib';
 import BaseSchemaAnnotation, {
@@ -111,12 +111,12 @@ export default class RestSchemaAnnotation extends BaseSchemaAnnotation {
                 });
             }
 
-            function getDataLoader(context?: {_restDataLoader: IDataLoader<Object, Object>}): IDataLoader<Object, Object> {
+            function getDataLoader(context?: {_restDataLoader: DataLoader<Object, Object>}): DataLoader<Object, Object> {
                 if (context) {
                     let restDataLoader = context._restDataLoader;
 
                     if (!restDataLoader) {
-                        restDataLoader = new DataLoader(
+                        restDataLoader = new DataLoader<Object, Object>(
                             keys => Promise.all(keys.map(makeRequest)),
                             { cacheKeyFn: serializeRequestKey }
                         );

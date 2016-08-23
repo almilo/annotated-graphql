@@ -66,8 +66,8 @@ type Options<K, V> = {
  * with different access permissions and consider creating a new instance
  * per web request.
  */
-interface IDataLoader<K, V> {
-    new (batchLoadFn: BatchLoadFn<K, V>, options?: Options<K, V>);
+declare class DataLoader<K, V> {
+    constructor(batchLoadFn: BatchLoadFn<K, V>, options?: Options<K, V>);
 
     /**
      * Loads a key, returning a `Promise` for the value represented by that key.
@@ -93,23 +93,21 @@ interface IDataLoader<K, V> {
      * Clears the value at `key` from the cache, if it exists. Returns itself for
      * method chaining.
      */
-    clear(key: K): IDataLoader<K, V>;
+    clear(key: K): DataLoader<K, V>;
 
     /**
      * Clears the entire cache. To be used when some event results in unknown
      * invalidations across this particular `DataLoader`. Returns itself for
      * method chaining.
      */
-    clearAll(): IDataLoader<K, V>;
+    clearAll(): DataLoader<K, V>;
 
     /**
      * Adds the provied key and value to the cache. If the key already exists, no
      * change is made. Returns itself for method chaining.
      */
-    prime(key: K, value: V): IDataLoader<K, V>;
+    prime(key: K, value: V): DataLoader<K, V>;
 }
-
-declare const DataLoader: IDataLoader<any, any>;
 
 declare module 'dataloader' {
     export = DataLoader;
